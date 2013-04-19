@@ -348,23 +348,23 @@ class qformat_default {
         }
         $questions = $goodquestions;
 
-        // check for errors before we continue
+        // Check for errors before we continue.
         if ($this->stoponerror && $gradeerrors > 0) {
             return false;
         }
 
-        // count number of questions processed
+        // Count number of questions processed.
         $count = 0;
 
-        foreach ($questions as $question) {   // Process and store each question
+        foreach ($questions as $question) {   // Process and store each question.
 
-            // reset the php timeout
+            // Reset the php timeout.
             set_time_limit(0);
 
-            // check for category modifiers
+            // Check for category modifiers.
             if ($question->qtype == 'category') {
                 if ($this->catfromfile) {
-                    // find/create category object
+                    // Find/create category object.
                     $catpath = $question->category;
                     $newcategory = $this->create_category_path($catpath);
                     if (!empty($newcategory)) {
@@ -373,73 +373,19 @@ class qformat_default {
                 }
                 continue;
             }
-            $question->context = $this->importcontext;
-
             $count++;
 
             echo "<hr /><p><b>$count</b>. ".$this->format_question_text($question)."</p>";
 
+            $qtypeobj = question_bank::get_qtype($question->qtype);
+            $question->context = $this->importcontext;
             $question->category = $this->category->id;
-            $question->stamp = make_unique_id_code();  // Set the unique code (not to be changed)
+            $result = $qtypeobj->save_imported_question($question);
 
-            $question->createdby = $USER->id;
-            $question->timecreated = time();
-            $question->modifiedby = $USER->id;
-            $question->timemodified = time();
-            $fileoptions = array(
-                    'subdirs' => false,
-                    'maxfiles' => -1,
-                    'maxbytes' => 0,
-                );
-
-            $question->id = $DB->insert_record('question', $question);
-
-            if (isset($question->questiontextitemid)) {
-                $question->questiontext = file_save_draft_area_files($question->questiontextitemid,
-                        $this->importcontext->id, 'question', 'questiontext', $question->id,
-                        $fileoptions, $question->questiontext);
-            } else if (isset($question->questiontextfiles)) {
-                foreach ($question->questiontextfiles as $file) {
-                    question_bank::get_qtype($question->qtype)->import_file(
-                            $this->importcontext, 'question', 'questiontext', $question->id, $file);
-                }
-            }
-            if (isset($question->generalfeedbackitemid)) {
-                $question->generalfeedback = file_save_draft_area_files($question->generalfeedbackitemid,
-                        $this->importcontext->id, 'question', 'generalfeedback', $question->id,
-                        $fileoptions, $question->generalfeedback);
-            } else if (isset($question->generalfeedbackfiles)) {
-                foreach ($question->generalfeedbackfiles as $file) {
-                    question_bank::get_qtype($question->qtype)->import_file(
-                            $this->importcontext, 'question', 'generalfeedback', $question->id, $file);
-                }
-            }
-            $DB->update_record('question', $question);
-
-            $this->questionids[] = $question->id;
-
-            // Now to save all the answers and type-specific options
-
-            $result = question_bank::get_qtype($question->qtype)->save_question_options($question);
-
-            if (!empty($CFG->usetags) && isset($question->tags)) {
-                require_once($CFG->dirroot . '/tag/lib.php');
-                tag_set('question', $question->id, $question->tags);
+            if (null !== $result) {
+                return $result;
             }
 
-            if (!empty($result->error)) {
-                echo $OUTPUT->notification($result->error);
-                return false;
-            }
-
-            if (!empty($result->notice)) {
-                echo $OUTPUT->notification($result->notice);
-                return true;
-            }
-
-            // Give the question a unique version stamp determined by question_hash()
-            $DB->set_field('question', 'version', question_hash($question),
-                    array('id' => $question->id));
         }
         return true;
     }

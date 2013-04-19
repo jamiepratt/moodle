@@ -430,6 +430,74 @@ class question_type {
     }
 
     /**
+     *
+     * @param stdClass $fromimport the question object produced by qformat.
+     */
+    public function save_imported_question($fromimport) {
+        global $USER, $DB, $CFG, $OUTPUT;
+        $fromimport->stamp = make_unique_id_code(); // Set the unique code (not to be changed).
+
+        $fromimport->createdby = $USER->id;
+        $fromimport->timecreated = time();
+        $fromimport->modifiedby = $USER->id;
+        $fromimport->timemodified = time();
+        $fileoptions = array(
+            'subdirs'  => false,
+            'maxfiles' => -1,
+            'maxbytes' => 0,
+        );
+
+        $fromimport->id = $DB->insert_record('question', $fromimport);
+
+        if (isset($fromimport->questiontextitemid)) {
+            $fromimport->questiontext = file_save_draft_area_files($fromimport->questiontextitemid,
+                                                                 $fromimport->context->id, 'question', 'questiontext',
+                                                                 $fromimport->id,
+                                                                 $fileoptions, $fromimport->questiontext);
+        } else if (isset($fromimport->questiontextfiles)) {
+            foreach ($fromimport->questiontextfiles as $file) {
+                $this->import_file($fromimport->context, 'question', 'questiontext', $fromimport->id, $file);
+            }
+        }
+        if (isset($fromimport->generalfeedbackitemid)) {
+            $fromimport->generalfeedback = file_save_draft_area_files($fromimport->generalfeedbackitemid,
+                                                                    $fromimport->context->id, 'question', 'generalfeedback',
+                                                                    $fromimport->id,
+                                                                    $fileoptions, $fromimport->generalfeedback);
+        } else if (isset($fromimport->generalfeedbackfiles)) {
+            foreach ($fromimport->generalfeedbackfiles as $file) {
+                $this->import_file($fromimport->context, 'question', 'generalfeedback', $fromimport->id, $file);
+            }
+        }
+        $DB->update_record('question', $fromimport);
+
+        // Now to save all the answers and type-specific options.
+
+        $result = $this->save_question_options($fromimport);
+
+        if (!empty($result->error)) {
+            echo $OUTPUT->notification($result->error);
+            return false;
+        }
+
+        if (!empty($result->notice)) {
+            echo $OUTPUT->notification($result->notice);
+            return true;
+        }
+
+        if (!empty($CFG->usetags) && isset($fromimport->tags)) {
+            require_once($CFG->dirroot.'/tag/lib.php');
+            tag_set('question', $fromimport->id, $fromimport->tags);
+        }
+        // Give the question a unique version stamp determined by question_hash().
+        $DB->set_field('question', 'version', question_hash($fromimport),
+                       array('id' => $fromimport->id));
+
+        return null;
+
+    }
+
+    /**
      * Saves question-type specific options
      *
      * This is called by {@link save_question()} to save the question-type specific data
