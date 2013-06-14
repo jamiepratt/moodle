@@ -163,7 +163,7 @@ class MoodleQuickForm_select extends HTML_QuickForm_select{
         $cleaned = array();
         foreach ($value as $v) {
             foreach ($this->_options as $option) {
-                if ((string)$option['attr']['value'] === (string)$v) {
+                if ((string)$option['attr']['value'] == (string)$v) {
                     $cleaned[] = (string)$option['attr']['value'];
                     break;
                 }
