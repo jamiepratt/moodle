@@ -222,7 +222,7 @@ abstract class moodleform {
      *                first element if no errors. Use this as a parameter
      *                when calling print_header
      */
-    function focus($name=NULL) {
+    function focus($name=null) {
         $form =& $this->_form;
         $elkeys = array_keys($form->_elementIndex);
         $error = false;
@@ -1306,6 +1306,20 @@ abstract class moodleform {
                 }
             }
         }
+    }
+
+    /**
+     * Used by tests to simulate form submission by the user. Can be called after set_data method so that if the form contents
+     * pass validation  data passed to set_data and through setDefault is made available to get_data method.
+     * When writing tests you should be aware that this is slightly different from the data that will be passed if the user
+     * submits a form. The difference is for elements which have no default, if the user submits a form then an
+     * empty property would be included in the object for the element with no default even if nothing was entered, if you call
+     * mock_submit then there will be no property returned by get_data for elements with no default value and nothing loaded in by
+     * set_data.
+     * @return void
+     */
+    public function mock_submit() {
+        $this->_form->mockSubmit();
     }
 }
 
@@ -2452,6 +2466,11 @@ function validate_' . $this->_formName . '(frm) {
     function isSubmitted()
     {
         return parent::isSubmitted() && (!$this->isFrozen());
+    }
+
+    function mockSubmit(){
+        $this->_submitValues = $this->exportValues();
+        $this->_flagSubmitted = true;
     }
 }
 
