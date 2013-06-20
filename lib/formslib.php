@@ -1307,6 +1307,18 @@ abstract class moodleform {
             }
         }
     }
+
+    /**
+     * Used by tests to simulate submitted form data submission from the user.
+     *
+     * For form fields where no data is submitted the default for that field as set by set_data or setDefault will be passed to
+     * get_data.
+     * @param array $simulatedpostdata       An associative array of form values (same format as $_POST).
+     * @param array $simulatedsubmittedfiles An associative array of files uploaded (same format as $_FILES). Can be omitted.
+     */
+    public function mock_submit($simulatedpostdata, $simulatedsubmittedfiles = array()) {
+        $this->_form->updateSubmission($simulatedpostdata, $simulatedsubmittedfiles);
+    }
 }
 
 /**
