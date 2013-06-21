@@ -163,7 +163,7 @@ class MoodleQuickForm_select extends HTML_QuickForm_select{
         $cleaned = array();
         foreach ($value as $v) {
             foreach ($this->_options as $option) {
-                if ((string)$option['attr']['value'] === (string)$v) {
+                if ($this->valuesSame($option['attr']['value'], $v)) {
                     $cleaned[] = (string)$option['attr']['value'];
                     break;
                 }
@@ -178,5 +178,14 @@ class MoodleQuickForm_select extends HTML_QuickForm_select{
         } else {
             return $this->_prepareValue($cleaned[0], $assoc);
         }
+    }
+
+    /**
+     * @param $v1
+     * @param $v2
+     * @return bool are $v1 and $v2 the same.
+     */
+    protected function valuesSame($v1, $v2) {
+        return (string)$v1 === (string)$v2;
     }
 }

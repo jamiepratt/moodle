@@ -297,7 +297,7 @@ abstract class question_edit_form extends question_wizard_form {
         $answeroptions = array();
         $answeroptions[] = $mform->createElement('text', 'answer',
                 $label, array('size' => 40));
-        $answeroptions[] = $mform->createElement('select', 'fraction',
+        $answeroptions[] = $mform->createElement('selectfloat', 'fraction',
                 get_string('grade'), $gradeoptions);
         $repeated[] = $mform->createElement('group', 'answeroptions',
                  $label, $answeroptions, null, false);
@@ -428,7 +428,7 @@ abstract class question_edit_form extends question_wizard_form {
         foreach ($penalties as $penalty) {
             $penaltyoptions["$penalty"] = (100 * $penalty) . '%';
         }
-        $mform->addElement('select', 'penalty',
+        $mform->addElement('selectfloat', 'penalty',
                 get_string('penaltyforeachincorrecttry', 'question'), $penaltyoptions);
         $mform->addHelpButton('penalty', 'penaltyforeachincorrecttry', 'question');
         $mform->setDefault('penalty', 0.3333333);
