@@ -77,12 +77,15 @@ class qtype_shortanswer_test_helper extends question_test_helper {
         $qdata->generalfeedback = 'Generalfeedback: frog or toad would have been OK.';
 
         $qdata->options = new stdClass();
-        $qdata->options->usecase = false;
+        $qdata->options->usecase = 0;
         $qdata->options->answers = array(
             13 => new question_answer(13, 'frog', 1.0, 'Frog is a very good answer.', FORMAT_HTML),
             14 => new question_answer(14, 'toad', 0.8, 'Toad is an OK good answer.', FORMAT_HTML),
             15 => new question_answer(15, '*', 0.0, 'That is a bad answer.', FORMAT_HTML),
         );
+        foreach ($qdata->options->answers as $answer) {
+            $answer->answerformat = FORMAT_MOODLE;
+        }
 
         return $qdata;
     }
@@ -100,10 +103,11 @@ class qtype_shortanswer_test_helper extends question_test_helper {
         $fromform->qtype = 'shortanswer';
         $fromform->name = 'Short answer question';
         $fromform->questiontext = array('text' => 'Name an amphibian: __________', 'format' => FORMAT_HTML);
+        $fromform->defaultmark = 1.0;
         $fromform->generalfeedback = array('text' => 'Generalfeedback: frog or toad would have been OK.', 'format' => FORMAT_HTML);
         $fromform->usecase = false;
         $fromform->answer = array('frog', 'toad', '*');
-        $fromform->fraction = array(1.0, 0.8, 0.0);
+        $fromform->fraction = array('1.0', '0.8', '0.0');
         $fromform->feedback = array(
             array('text' => 'Frog is a very good answer.', 'format' => FORMAT_HTML),
             array('text' => 'Toad is an OK good answer.', 'format' => FORMAT_HTML),

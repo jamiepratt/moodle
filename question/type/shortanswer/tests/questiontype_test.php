@@ -95,4 +95,83 @@ class qtype_shortanswer_test extends advanced_testcase {
             ),
         ), $this->qtype->get_possible_responses($q));
     }
+
+    public function test_question_saving_frogtoad() {
+        $this->resetAfterTest(true);
+        $this->setAdminUser();
+
+        $questiondata = test_question_maker::get_question_data('shortanswer');
+        $formdata = test_question_maker::get_question_form_data('shortanswer');
+
+        list($cat, $systemcontext, $form) = $this->get_question_editing_form($questiondata);
+
+        $form->set_data(clone($questiondata));
+        $formdata->category = "{$cat->id},{$systemcontext->id}";
+        $form->mock_submit((array)$formdata);
+        $fromform = $form->get_data();
+
+        $returnedfromsave = $this->qtype->save_question($questiondata, $fromform);
+        $actualquestionsdata = question_load_questions(array($returnedfromsave->id));
+        $actualquestiondata = end($actualquestionsdata);
+
+        $this->assertEquals($this->normalize_question_data($questiondata), $this->normalize_question_data($actualquestiondata));
+    }
+
+    /**
+     * Used before comparison. Remove properties we don't want to compare, ones we don't want to predict or test.
+     * @param object  $questiondataasobject
+     * @return array  the question data with some elements we don't want to predict removed. Array comparison gives a nice diff
+     *                      in my IDE if there is a failure.
+     */
+    protected function normalize_question_data($questiondataasobject) {
+        // Remove some properties we don't want to compare.
+        foreach (array('version', 'timemodified', 'timecreated') as $propertytounset) {
+            unset($questiondataasobject->{$propertytounset});
+        }
+        $questiondataasobject->options->answers = $this->normalize_answer_array($questiondataasobject->options->answers);
+        $questiondata = (array)$questiondataasobject;
+        ksort($questiondata);
+        return $questiondata;
+    }
+
+    protected function normalize_answer_array($answers, $decimals = 7) {
+        $normalized = array();
+        foreach ($answers as $answer) {
+            $normalized[$answer->answer] = new stdClass();
+            foreach ($answer as $property => $value) {
+                if (!in_array($property, array('answer', 'id', 'question'))) {
+                    if (is_float($value)) {
+                        $value = number_format($value, $decimals, '.', '');
+                    }
+                    $normalized[$answer->answer]->{$property} = $value;
+                }
+            }
+        }
+        ksort($normalized);
+        return $normalized;
+    }
+
+    /**
+     * Set up a form to create a question in a new category in the system context.
+     * @param $questiondata
+     * @return array
+     */
+    protected function get_question_editing_form($questiondata) {
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $cat = $generator->create_question_category(array());
+        $systemcontext = context_system::instance();
+        $contexts = array($systemcontext);
+        $questiondata->contextid = $systemcontext->id;
+        $questiondata->category = $cat->id;
+        $questiondataforformconstructor = clone($questiondata);
+        $questiondataforformconstructor->category = $cat->id;
+        $questiondataforformconstructor->formoptions = new stdClass();
+        $questiondataforformconstructor->formoptions->canmove = true;
+        $questiondataforformconstructor->formoptions->cansaveasnew = true;
+        $questiondataforformconstructor->formoptions->movecontext = false;
+        $questiondataforformconstructor->formoptions->canedit = true;
+        $questiondataforformconstructor->formoptions->repeatelements = true;
+        $form = $this->qtype->create_editing_form('question.php', $questiondataforformconstructor, $cat, $contexts, true);
+        return array($cat, $systemcontext, $form);
+    }
 }
