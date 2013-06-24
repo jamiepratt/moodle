@@ -96,6 +96,30 @@ abstract class question_test_helper {
      * this question type.
      */
     abstract public function get_test_questions();
+
+    /**
+     * Set up a form to create a question in $cat.
+     * @param object $cat the category
+     * @param object $questiondata form initialisation requires question data.
+     * @return array
+     */
+    public static function get_question_editing_form($cat, $questiondata) {
+        $catcontext = context::instance_by_id($cat->contextid, MUST_EXIST);
+        $contexts = array($catcontext);
+        $questiondata->contextid = $catcontext->id;
+        $questiondata->category = $cat->id;
+        $questiondataforformconstructor = clone($questiondata);
+        $questiondataforformconstructor->category = $cat->id;
+        $questiondataforformconstructor->formoptions = new stdClass();
+        $questiondataforformconstructor->formoptions->canmove = true;
+        $questiondataforformconstructor->formoptions->cansaveasnew = true;
+        $questiondataforformconstructor->formoptions->movecontext = false;
+        $questiondataforformconstructor->formoptions->canedit = true;
+        $questiondataforformconstructor->formoptions->repeatelements = true;
+        $qtype = question_bank::get_qtype($questiondata->qtype);
+        $form = $qtype->create_editing_form('question.php', $questiondataforformconstructor, $cat, $contexts, true);
+        return $form;
+    }
 }
 
 

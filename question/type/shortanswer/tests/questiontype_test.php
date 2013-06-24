@@ -95,4 +95,58 @@ class qtype_shortanswer_test extends advanced_testcase {
             ),
         ), $this->qtype->get_possible_responses($q));
     }
+
+    public function test_question_saving_frogtoad() {
+        $this->resetAfterTest(true);
+        $this->setAdminUser();
+
+        $questiondata = test_question_maker::get_question_data('shortanswer');
+        $formdata = test_question_maker::get_question_form_data('shortanswer');
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $cat = $generator->create_question_category(array());
+        $form = qtype_shortanswer_test_helper::get_question_editing_form($cat, $questiondata);
+
+        $formdata->category = "{$cat->id},{$cat->contextid}";
+        $form->mock_submit((array)$formdata);
+
+        $this->assertTrue($form->is_validated());
+
+        $fromform = $form->get_data();
+
+        $returnedfromsave = $this->qtype->save_question($questiondata, $fromform);
+        $actualquestionsdata = question_load_questions(array($returnedfromsave->id));
+        $actualquestiondata = end($actualquestionsdata);
+
+        foreach ($questiondata as $property => $value) {
+            if (!in_array($property, array('id', 'version', 'timemodified', 'timecreated', 'options'))) {
+                $this->assertAttributeEquals($value, $property, $actualquestiondata);
+            }
+        }
+
+        foreach ($questiondata->options as $optionname => $value) {
+            if ($optionname != 'answers') {
+                $this->assertAttributeEquals($value, $optionname, $actualquestiondata->options);
+            }
+        }
+
+        foreach ($questiondata->options->answers as $answer) {
+            // Find same answer.
+            $foundsameanswer = false;
+            foreach ($actualquestiondata->options->answers as $actualanswer) {
+                if ($actualanswer->answer == $answer->answer) {
+                    $foundsameanswer = true;
+                    break;
+                }
+            }
+            $this->assertTrue($foundsameanswer);
+            foreach ($answer as $ansproperty => $ansvalue) {
+                // This question does not use 'answerformat', will ignore it.
+                // We already know answer matches from the search above.
+                if (!in_array($ansproperty, array('id', 'question', 'answerformat', 'answer'))) {
+                    $this->assertAttributeEquals($ansvalue, $ansproperty, $actualanswer);
+                }
+            }
+        }
+    }
 }
