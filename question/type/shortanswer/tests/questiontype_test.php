@@ -131,19 +131,10 @@ class qtype_shortanswer_test extends advanced_testcase {
         }
 
         foreach ($questiondata->options->answers as $answer) {
-            // Find same answer.
-            $foundsameanswer = false;
-            foreach ($actualquestiondata->options->answers as $actualanswer) {
-                if ($actualanswer->answer == $answer->answer) {
-                    $foundsameanswer = true;
-                    break;
-                }
-            }
-            $this->assertTrue($foundsameanswer);
+            $actualanswer = array_shift($actualquestiondata->options->answers);
             foreach ($answer as $ansproperty => $ansvalue) {
                 // This question does not use 'answerformat', will ignore it.
-                // We already know answer matches from the search above.
-                if (!in_array($ansproperty, array('id', 'question', 'answerformat', 'answer'))) {
+                if (!in_array($ansproperty, array('id', 'question', 'answerformat'))) {
                     $this->assertAttributeEquals($ansvalue, $ansproperty, $actualanswer);
                 }
             }
