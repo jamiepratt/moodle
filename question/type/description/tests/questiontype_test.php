@@ -17,9 +17,8 @@
 /**
  * Unit tests for the description question type class.
  *
- * @package    qtype
- * @subpackage description
- * @copyright  2010 The Open University
+ * @package    qtype_description
+ * @copyright  2013 The Open University
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -33,7 +32,7 @@ require_once($CFG->dirroot . '/question/engine/tests/helpers.php');
 /**
  * Unit tests for the description question type class.
  *
- * @copyright  2010 The Open University
+ * @copyright  2013 The Open University
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_description_test extends advanced_testcase {
