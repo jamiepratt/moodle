@@ -98,7 +98,7 @@ abstract class question_test_helper {
     abstract public function get_test_questions();
 
     /**
-     * Set up a form to create a question in $cat.
+     * Set up a form to create a question in $cat. This method also sets cat and contextid on $questiondata object.
      * @param object $cat the category
      * @param object $questiondata form initialisation requires question data.
      * @return array
@@ -109,7 +109,6 @@ abstract class question_test_helper {
         $questiondata->contextid = $catcontext->id;
         $questiondata->category = $cat->id;
         $questiondataforformconstructor = clone($questiondata);
-        $questiondataforformconstructor->category = $cat->id;
         $questiondataforformconstructor->formoptions = new stdClass();
         $questiondataforformconstructor->formoptions->canmove = true;
         $questiondataforformconstructor->formoptions->cansaveasnew = true;
@@ -194,18 +193,6 @@ class test_question_maker {
         $qdata->createdby = $USER->id;
         $qdata->modifiedby = $USER->id;
         $qdata->hints = array();
-    }
-
-    public static function initialise_question_form_data($qdata) {
-        $formdata = new stdClass();
-        $formdata->id = 0;
-        $formdata->category = '0,0';
-        $formdata->usecurrentcat = 1;
-        $formdata->categorymoveto = '0,0';
-        $formdata->tags = array();
-        $formdata->penalty = 0.3333333;
-        $formdata->questiontextformat = FORMAT_HTML;
-        $formdata->generalfeedbackformat = FORMAT_HTML;
     }
 
     /**

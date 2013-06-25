@@ -59,11 +59,10 @@ class qtype_description_test_helper extends question_test_helper {
     }
 
     /**
-     * Get the question data, as it would be loaded by get_question_options, for
-     * the question returned by {@link make_an_oumultiresponse_two_of_four()}.
+     * Get the question data, as it would be loaded by get_question_options.
      * @return object
      */
-    public static function get_question_data() {
+    public static function get_description_question_data_info() {
         global $USER;
 
         $qdata = new stdClass();
@@ -87,7 +86,28 @@ class qtype_description_test_helper extends question_test_helper {
         $qdata->length = 0;
         $qdata->penalty = 0;
         $qdata->hidden = 0;
+        $qdata->hints = array();
+        $qdata->options = new stdClass();
+        $qdata->options->answers = array();
 
         return $qdata;
     }
+
+
+    /**
+     * Get the question form data.
+     * @return object
+     */
+    public static function get_description_question_form_data_info() {
+        $form = new stdClass();
+
+        $form->name = 'Description';
+        $form->questiontext = array('text' => 'Here is some information about the questions you are about to attempt.',
+                                    'format' => FORMAT_HTML);
+        $form->generalfeedback = array('text' => 'And here is some more text shown only on the review page.',
+                                       'format' => FORMAT_HTML);
+
+        return $form;
+    }
+
 }

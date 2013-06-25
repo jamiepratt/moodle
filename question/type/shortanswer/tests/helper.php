@@ -95,9 +95,7 @@ class qtype_shortanswer_test_helper extends question_test_helper {
      */
     public function get_shortanswer_question_form_data_frogtoad() {
         $form = new stdClass();
-        test_question_maker::initialise_question_form_data($form);
 
-        $form->qtype = 'shortanswer';
         $form->name = 'Short answer question';
         $form->questiontext = array('text' => 'Name an amphibian: __________', 'format' => FORMAT_HTML);
         $form->defaultmark = 1.0;

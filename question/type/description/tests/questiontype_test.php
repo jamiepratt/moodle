@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once($CFG->dirroot . '/question/type/description/questiontype.php');
-
+require_once($CFG->dirroot . '/question/engine/tests/helpers.php');
 
 /**
  * Unit tests for the description question type class.
@@ -65,5 +65,35 @@ class qtype_description_test extends advanced_testcase {
 
     public function test_get_possible_responses() {
         $this->assertEquals(array(), $this->qtype->get_possible_responses(null));
+    }
+
+
+    public function test_question_saving() {
+        $this->resetAfterTest(true);
+        $this->setAdminUser();
+
+        $questiondata = test_question_maker::get_question_data('description');
+        $formdata = test_question_maker::get_question_form_data('description');
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $cat = $generator->create_question_category(array());
+        $form = qtype_description_test_helper::get_question_editing_form($cat, $questiondata);
+
+        $formdata->category = "{$cat->id},{$cat->contextid}";
+        $form->mock_submit((array)$formdata);
+
+        $this->assertTrue($form->is_validated());
+
+        $fromform = $form->get_data();
+
+        $returnedfromsave = $this->qtype->save_question($questiondata, $fromform);
+        $actualquestionsdata = question_load_questions(array($returnedfromsave->id));
+        $actualquestiondata = end($actualquestionsdata);
+
+        foreach ($questiondata as $property => $value) {
+            if (!in_array($property, array('id', 'version', 'timemodified', 'timecreated'))) {
+                $this->assertAttributeEquals($value, $property, $actualquestiondata);
+            }
+        }
     }
 }
