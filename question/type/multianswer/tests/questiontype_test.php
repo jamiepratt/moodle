@@ -19,7 +19,7 @@
  *
  * @package    qtype
  * @subpackage multianswer
- * @copyright  2013 The Open University
+ * @copyright  2011 The Open University
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -34,7 +34,7 @@ require_once($CFG->dirroot . '/question/type/multianswer/questiontype.php');
 /**
  * Unit tests for the multianswer question definition class.
  *
- * @copyright  2013 The Open University
+ * @copyright  2011 The Open University
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_multianswer_test extends advanced_testcase {

@@ -101,7 +101,7 @@ abstract class question_test_helper {
      * Set up a form to create a question in $cat. This method also sets cat and contextid on $questiondata object.
      * @param object $cat the category
      * @param object $questiondata form initialisation requires question data.
-     * @return array
+     * @return moodleform
      */
     public static function get_question_editing_form($cat, $questiondata) {
         $catcontext = context::instance_by_id($cat->contextid, MUST_EXIST);
@@ -116,8 +116,7 @@ abstract class question_test_helper {
         $questiondataforformconstructor->formoptions->canedit = true;
         $questiondataforformconstructor->formoptions->repeatelements = true;
         $qtype = question_bank::get_qtype($questiondata->qtype);
-        $form = $qtype->create_editing_form('question.php', $questiondataforformconstructor, $cat, $contexts, true);
-        return $form;
+        return  $qtype->create_editing_form('question.php', $questiondataforformconstructor, $cat, $contexts, true);
     }
 }
 
@@ -423,6 +422,19 @@ class test_question_maker {
         $q->shownumcorrect = true;
         $q->incorrectfeedback = self::STANDARD_OVERALL_INCORRECT_FEEDBACK;
         $q->incorrectfeedbackformat = FORMAT_HTML;
+    }
+
+    /**
+     * Add some standard overall feedback to a question's form data.
+     */
+    public static function set_standard_combined_feedback_form_data($form) {
+        $form->correctfeedback = array('text' => self::STANDARD_OVERALL_CORRECT_FEEDBACK,
+                                    'format' => FORMAT_HTML);
+        $form->partiallycorrectfeedback = array('text' => self::STANDARD_OVERALL_PARTIALLYCORRECT_FEEDBACK,
+                                             'format' => FORMAT_HTML);
+        $form->shownumcorrect = true;
+        $form->incorrectfeedback = array('text' => self::STANDARD_OVERALL_INCORRECT_FEEDBACK,
+                                    'format' => FORMAT_HTML);
     }
 }
 

@@ -135,4 +135,59 @@ class qtype_match_test extends advanced_testcase {
                 null => question_possible_response::no_response()),
         ), $this->qtype->get_possible_responses($q));
     }
+
+
+    public function test_question_saving_foursubq() {
+        $this->resetAfterTest(true);
+        $this->setAdminUser();
+
+        $questiondata = test_question_maker::get_question_data('match');
+        $formdata = test_question_maker::get_question_form_data('match');
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $cat = $generator->create_question_category(array());
+        $form = qtype_match_test_helper::get_question_editing_form($cat, $questiondata);
+
+        $formdata->category = "{$cat->id},{$cat->contextid}";
+        $form->mock_submit((array)$formdata);
+
+        $this->assertTrue($form->is_validated());
+
+        $fromform = $form->get_data();
+
+        $returnedfromsave = $this->qtype->save_question($questiondata, $fromform);
+        $actualquestionsdata = question_load_questions(array($returnedfromsave->id));
+        $actualquestiondata = end($actualquestionsdata);
+
+/*
+                $questiondata = (array)$questiondata;
+                ksort($questiondata);
+                $actualquestiondata = (array)$actualquestiondata;
+                ksort($actualquestiondata);
+                $this->assertEquals($questiondata, $actualquestiondata);*/
+
+        foreach ($questiondata as $property => $value) {
+            if (!in_array($property, array('id', 'version', 'timemodified', 'timecreated', 'options', 'stamp'))) {
+                $this->assertAttributeEquals($value, $property, $actualquestiondata);
+            }
+        }
+
+        foreach ($questiondata->options as $optionname => $value) {
+            if ($optionname != 'subquestions') {
+                $this->assertAttributeEquals($value, $optionname, $actualquestiondata->options);
+            }
+        }
+
+        $this->assertObjectHasAttribute('subquestions', $actualquestiondata->options);
+
+        $subqpropstoignore = array('id');
+        foreach ($questiondata->options->subquestions as $subq) {
+            $actualsubq = array_shift($actualquestiondata->options->subquestions);
+            foreach ($subq as $subqproperty => $subqvalue) {
+                if (!in_array($subqproperty, $subqpropstoignore)) {
+                    $this->assertAttributeEquals($subqvalue, $subqproperty, $actualsubq);
+                }
+            }
+        }
+    }
 }
