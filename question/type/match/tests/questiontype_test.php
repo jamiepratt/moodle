@@ -28,6 +28,8 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->dirroot . '/question/engine/tests/helpers.php');
 require_once($CFG->dirroot . '/question/type/match/questiontype.php');
+require_once($CFG->dirroot . '/question/type/edit_question_form.php');
+require_once($CFG->dirroot . '/question/type/match/edit_match_form.php');
 
 
 /**
@@ -146,11 +148,12 @@ class qtype_match_test extends advanced_testcase {
 
         $generator = $this->getDataGenerator()->get_plugin_generator('core_question');
         $cat = $generator->create_question_category(array());
-        $form = qtype_match_test_helper::get_question_editing_form($cat, $questiondata);
 
         $formdata->category = "{$cat->id},{$cat->contextid}";
-        $form->mock_submit((array)$formdata);
 
+        qtype_match_edit_form::mock_submit((array)$formdata);
+
+        $form = qtype_match_test_helper::get_question_editing_form($cat, $questiondata);
         $this->assertTrue($form->is_validated());
 
         $fromform = $form->get_data();
@@ -158,13 +161,6 @@ class qtype_match_test extends advanced_testcase {
         $returnedfromsave = $this->qtype->save_question($questiondata, $fromform);
         $actualquestionsdata = question_load_questions(array($returnedfromsave->id));
         $actualquestiondata = end($actualquestionsdata);
-
-/*
-                $questiondata = (array)$questiondata;
-                ksort($questiondata);
-                $actualquestiondata = (array)$actualquestiondata;
-                ksort($actualquestiondata);
-                $this->assertEquals($questiondata, $actualquestiondata);*/
 
         foreach ($questiondata as $property => $value) {
             if (!in_array($property, array('id', 'version', 'timemodified', 'timecreated', 'options', 'stamp'))) {
