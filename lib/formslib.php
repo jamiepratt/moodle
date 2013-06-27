@@ -181,7 +181,7 @@ abstract class moodleform {
         }
         // Assign custom data first, so that get_form_identifier can use it.
         $this->_customdata = $customdata;
-        $this->_formname = $this->get_form_identifier();
+        $this->_formname = static::get_form_identifier();
 
         $this->_form = new MoodleQuickForm($this->_formname, $method, $action, $target, $attributes);
         if (!$editable){
@@ -210,8 +210,8 @@ abstract class moodleform {
      *
      * @return string form identifier.
      */
-    protected function get_form_identifier() {
-        return get_class($this);
+    protected static function get_form_identifier() {
+        return get_called_class();
     }
 
     /**
@@ -1313,11 +1313,22 @@ abstract class moodleform {
      *
      * For form fields where no data is submitted the default for that field as set by set_data or setDefault will be passed to
      * get_data.
-     * @param array $simulatedpostdata       An associative array of form values (same format as $_POST).
-     * @param array $simulatedsubmittedfiles An associative array of files uploaded (same format as $_FILES). Can be omitted.
+     * @param array  $simulatedsubmitteddata       An associative array of form values (same format as $_POST).
+     * @param array  $simulatedsubmittedfiles      An associative array of files uploaded (same format as $_FILES). Can be omitted.
+     * @param string $method                       'post' or 'get', defaults to 'post'.
      */
-    public function mock_submit($simulatedpostdata, $simulatedsubmittedfiles = array()) {
-        $this->_form->updateSubmission($simulatedpostdata, $simulatedsubmittedfiles);
+    public static function mock_submit($simulatedsubmitteddata, $simulatedsubmittedfiles = array(), $method = 'post') {
+        global $_POST, $_GET, $_FILES;
+        if (count($simulatedsubmittedfiles) !== 0) {
+            $_FILES = $simulatedsubmittedfiles;
+        }
+        $simulatedsubmitteddata['_qf__'.static::get_form_identifier()] = 1;
+        $simulatedsubmitteddata['sesskey'] = sesskey();
+        if (strtolower($method) === 'get') {
+            $_GET = $simulatedsubmitteddata;
+        } else {
+            $_POST = $simulatedsubmitteddata;
+        }
     }
 }
 
