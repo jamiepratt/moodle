@@ -28,6 +28,8 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->dirroot . '/question/type/shortanswer/questiontype.php');
 require_once($CFG->dirroot . '/question/engine/tests/helpers.php');
+require_once($CFG->dirroot . '/question/type/edit_question_form.php');
+require_once($CFG->dirroot . '/question/type/shortanswer/edit_shortanswer_form.php');
 
 
 /**
@@ -104,10 +106,11 @@ class qtype_shortanswer_test extends advanced_testcase {
 
         $generator = $this->getDataGenerator()->get_plugin_generator('core_question');
         $cat = $generator->create_question_category(array());
-        $form = qtype_shortanswer_test_helper::get_question_editing_form($cat, $questiondata);
 
         $formdata->category = "{$cat->id},{$cat->contextid}";
-        $form->mock_submit((array)$formdata);
+        qtype_shortanswer_edit_form::mock_submit((array)$formdata);
+
+        $form = qtype_shortanswer_test_helper::get_question_editing_form($cat, $questiondata);
 
         $this->assertTrue($form->is_validated());
 

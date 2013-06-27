@@ -105,18 +105,18 @@ abstract class question_test_helper {
      */
     public static function get_question_editing_form($cat, $questiondata) {
         $catcontext = context::instance_by_id($cat->contextid, MUST_EXIST);
-        $contexts = array($catcontext);
-        $questiondata->contextid = $catcontext->id;
-        $questiondata->category = $cat->id;
-        $questiondataforformconstructor = clone($questiondata);
-        $questiondataforformconstructor->formoptions = new stdClass();
-        $questiondataforformconstructor->formoptions->canmove = true;
-        $questiondataforformconstructor->formoptions->cansaveasnew = true;
-        $questiondataforformconstructor->formoptions->movecontext = false;
-        $questiondataforformconstructor->formoptions->canedit = true;
-        $questiondataforformconstructor->formoptions->repeatelements = true;
+        $contexts = new question_edit_contexts($catcontext);
+        $dataforformconstructor = new stdClass();
+        $dataforformconstructor->contextid = $questiondata->contextid = $catcontext->id;
+        $dataforformconstructor->category = $questiondata->category = $cat->id;
+        $dataforformconstructor->formoptions = new stdClass();
+        $dataforformconstructor->formoptions->canmove = true;
+        $dataforformconstructor->formoptions->cansaveasnew = true;
+        $dataforformconstructor->formoptions->movecontext = false;
+        $dataforformconstructor->formoptions->canedit = true;
+        $dataforformconstructor->formoptions->repeatelements = true;
         $qtype = question_bank::get_qtype($questiondata->qtype);
-        return  $qtype->create_editing_form('question.php', $questiondataforformconstructor, $cat, $contexts, true);
+        return  $qtype->create_editing_form('question.php', $dataforformconstructor, $cat, $contexts, true);
     }
 }
 
