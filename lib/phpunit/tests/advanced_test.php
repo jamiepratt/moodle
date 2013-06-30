@@ -219,6 +219,43 @@ class core_phpunit_advanced_testcase extends advanced_testcase {
         $this->assertTrue(isset($CFG->admin));
         $this->assertEquals(1, $CFG->rolesactive);
 
+        // _GET change
+        $_GET['__somethingthatwillnotnormallybepresent__'] = 'yy';
+        try {
+            phpunit_util::reset_all_data(true);
+        } catch (Exception $e) {
+            $this->assertInstanceOf('PHPUnit_Framework_Error_Warning', $e);
+            $this->assertContains('__somethingthatwillnotnormallybepresent__', $e->getMessage());
+        }
+
+        $this->assertTrue(isset($_GET));
+        $this->assertFalse(isset($_GET['__somethingthatwillnotnormallybepresent__']));
+
+
+        // _POST change
+
+        $_POST['__somethingthatwillnotnormallybepresent2__'] = 'yy';
+        try {
+            phpunit_util::reset_all_data(true);
+        } catch (Exception $e) {
+            $this->assertInstanceOf('PHPUnit_Framework_Error_Warning', $e);
+            $this->assertContains('__somethingthatwillnotnormallybepresent2__', $e->getMessage());
+        }
+        $this->assertTrue(isset($_POST));
+        $this->assertFalse(isset($_POST['__somethingthatwillnotnormallybepresent2__']));
+
+        // _FILES change
+
+        $_FILES['__somethingthatwillnotnormallybepresent3__'] = 'yy';
+        try {
+            phpunit_util::reset_all_data(true);
+        } catch (Exception $e) {
+            $this->assertInstanceOf('PHPUnit_Framework_Error_Warning', $e);
+            $this->assertContains('__somethingthatwillnotnormallybepresent3__', $e->getMessage());
+        }
+        $this->assertTrue(isset($_FILES));
+        $this->assertFalse(isset($_FILES['__somethingthatwillnotnormallybepresent3__']));
+
         //silent changes
         $_SERVER['xx'] = 'yy';
         phpunit_util::reset_all_data(true);

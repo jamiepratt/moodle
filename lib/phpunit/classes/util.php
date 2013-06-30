@@ -118,22 +118,35 @@ class phpunit_util extends testing_util {
                 $warnings[] = 'Warning: unexpected database modification, resetting DB state';
             }
 
-            $oldcfg = self::get_global_backup('CFG');
             $oldsite = self::get_global_backup('SITE');
-            foreach($CFG as $k=>$v) {
-                if (!property_exists($oldcfg, $k)) {
-                    $warnings[] = 'Warning: unexpected new $CFG->'.$k.' value';
-                } else if ($oldcfg->$k !== $CFG->$k) {
-                    $warnings[] = 'Warning: unexpected change of $CFG->'.$k.' value';
-                }
-                unset($oldcfg->$k);
+            foreach (array('CFG', '_GET', '_POST', '_FILES') as $globalname) {
+                $old = self::get_global_backup($globalname);
+                if (isset($$globalname)) {
+                    if ($old === null) {
+                        $warnings[] = "Warning: $globalname unexpectedly set.";
+                    } else {
+                        foreach ($$globalname as $k => $v) {
+                            if (!property_exists($old, $k)) {
+                                $warnings[] = 'Warning: unexpected new '.$globalname.'->'.$k.' value';
+                            } else if ($old->$k !== $v) {
+                                $warnings[] = 'Warning: unexpected change of '.$globalname.'->'.$k.' value';
+                            }
+                            unset($old->$k);
+                        }
+                    }
 
-            }
-            if ($oldcfg) {
-                foreach($oldcfg as $k=>$v) {
-                    $warnings[] = 'Warning: unexpected removal of $CFG->'.$k;
+                }
+                if ($old) {
+                    if (!isset($$globalname)) {
+                        $warnings[] = "Warning: unexpected unsetting of $globalname.";
+                    } else {
+                        foreach ($old as $k => $v) {
+                            $warnings[] = 'Warning: unexpected removal of '.$globalname.'->'.$k;
+                        }
+                    }
                 }
             }
+
 
             if ($USER->id != 0) {
                 $warnings[] = 'Warning: unexpected change of $USER';
@@ -156,10 +169,13 @@ class phpunit_util extends testing_util {
             set_time_limit(0);
         }
 
-        // restore original globals
+        // Restore original globals.
         $_SERVER = self::get_global_backup('_SERVER');
         $CFG = self::get_global_backup('CFG');
         $SITE = self::get_global_backup('SITE');
+        $_GET = self::get_global_backup('_GET');
+        $_POST = self::get_global_backup('_POST');
+        $_FILES = self::get_global_backup('_FILES');
         $COURSE = $SITE;
 
         // reinitialise following globals
@@ -240,11 +256,14 @@ class phpunit_util extends testing_util {
     public static function bootstrap_init() {
         global $CFG, $SITE, $DB;
 
-        // backup the globals
+        // Backup the globals.
         self::$globals['_SERVER'] = $_SERVER;
         self::$globals['CFG'] = clone($CFG);
         self::$globals['SITE'] = clone($SITE);
         self::$globals['DB'] = $DB;
+        self::$globals['_GET'] = $_GET;
+        self::$globals['_POST'] = $_POST;
+        self::$globals['_FILES'] = $_FILES;
 
         // refresh data in all tables, clear caches, etc.
         phpunit_util::reset_all_data();
