@@ -107,6 +107,7 @@ abstract class question_test_helper {
         $catcontext = context::instance_by_id($cat->contextid, MUST_EXIST);
         $contexts = new question_edit_contexts($catcontext);
         $dataforformconstructor = new stdClass();
+        $dataforformconstructor->qtype = $questiondata->qtype;
         $dataforformconstructor->contextid = $questiondata->contextid = $catcontext->id;
         $dataforformconstructor->category = $questiondata->category = $cat->id;
         $dataforformconstructor->formoptions = new stdClass();
