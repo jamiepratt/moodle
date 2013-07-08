@@ -145,9 +145,7 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         $quizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_quiz');
 
         $quiz = $quizgenerator->create_instance(array('course'=>$SITE->id, 'questionsperpage' => 0, 'grade' => 100.0,
-                                                      'sumgrades' => 1));
-
-        // Create a couple of questions.
+                                                      'sumgrades' => 2));
 
         /* @var core_question_generator $questiongenerator */
         $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
@@ -160,6 +158,13 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
 
         // Add random question to the quiz.
         quiz_add_random_questions($quiz, 0, $cat->id, 1, false);
+
+        // Make another category.
+
+        $cat2 = $questiongenerator->create_question_category();
+        $match = $questiongenerator->create_question('match', null, array('category' => $cat->id));
+
+        quiz_add_quiz_question($match->id, $quiz, 0);
 
         // Make a user to do the quiz.
 
@@ -185,12 +190,18 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         /* @var quiz_attempt $attemptobj */
         $attemptobj = quiz_attempt::create($attempt->id);
 
+        $tosubmit = array();
         $selectedquestionid = $quba->get_question_attempt(1)->get_question()->id;
         if ($selectedquestionid == $numq->id) {
-            $tosubmit = array(1 => array('answer' => '3.14'));
+            $tosubmit[1] = array('answer' => '3.14');
         } else {
-            $tosubmit = array(1 => array('answer' => 'frog'));
+            $tosubmit[1] = array('answer' => 'frog');
         }
+
+        $tosubmit[2] = array(
+            0 => 'amphibian',
+            1 => 'mammal',
+            2 => 'amphibian');
 
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
 
@@ -206,7 +217,7 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         // Check that results are stored as expected.
 
         $this->assertEquals(1, $attemptobj->get_attempt_number());
-        $this->assertEquals(1, $attemptobj->get_sum_marks());
+        $this->assertEquals(2, $attemptobj->get_sum_marks());
         $this->assertEquals(true, $attemptobj->is_finished());
         $this->assertEquals($timenow, $attemptobj->get_submitted_date());
         $this->assertEquals($user1->id, $attemptobj->get_userid());
@@ -224,6 +235,7 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         $gradebookgrade = array_shift($gradebookitem->grades);
         $this->assertEquals(100, $gradebookgrade->grade);
     }
+
 
     /**
      * Test the functions quiz_update_open_attempts() and get_list_of_overdue_attempts()
