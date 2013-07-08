@@ -92,16 +92,9 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         // Process some responses from the student.
 
         $attemptobj = quiz_attempt::create($attempt->id);
-        $prefix1 = $quba->get_field_prefix(1);
-        $prefix2 = $quba->get_field_prefix(2);
 
-        $tosubmit = array();
-        $tosubmit['slots'] = '1,2';
-        $tosubmit[$prefix1.':sequencecheck'] = 1;
-        $tosubmit[$prefix1.'answer'] = 'frog';
-
-        $tosubmit[$prefix2.':sequencecheck'] = 1;
-        $tosubmit[$prefix2.'answer'] = '3.14';
+        $tosubmit = array(1 => array('answer' => 'frog'),
+                          2 => array('answer' => '3.14'));
 
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
 
@@ -118,6 +111,102 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
 
         $this->assertEquals(1, $attemptobj->get_attempt_number());
         $this->assertEquals(2, $attemptobj->get_sum_marks());
+        $this->assertEquals(true, $attemptobj->is_finished());
+        $this->assertEquals($timenow, $attemptobj->get_submitted_date());
+        $this->assertEquals($user1->id, $attemptobj->get_userid());
+
+        // Check quiz grades.
+
+        $grades = quiz_get_user_grades($quiz, $user1->id);
+        $grade = array_shift($grades);
+        $this->assertEquals(100.0, $grade->rawgrade);
+
+        // Check grade book.
+
+        $gradebookgrades = grade_get_grades($SITE->id, 'mod', 'quiz', $quiz->id, $user1->id);
+        $gradebookitem = array_shift($gradebookgrades->items);
+        $gradebookgrade = array_shift($gradebookitem->grades);
+        $this->assertEquals(100, $gradebookgrade->grade);
+    }
+
+    /**
+     * Create a quiz with questions and walk through a quiz attempt.
+     */
+    public function test_quiz_with_random_question_attempt_walkthrough() {
+        global $SITE;
+
+        $this->resetAfterTest(true);
+
+        $this->setAdminUser();
+
+        // Make a quiz.
+
+        /* @var mod_quiz_generator $quizgenerator */
+        $quizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_quiz');
+
+        $quiz = $quizgenerator->create_instance(array('course'=>$SITE->id, 'questionsperpage' => 0, 'grade' => 100.0,
+                                                      'sumgrades' => 1));
+
+        // Create a couple of questions.
+
+        /* @var core_question_generator $questiongenerator */
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+
+        // Add two questions to question category.
+
+        $cat = $questiongenerator->create_question_category();
+        $saq = $questiongenerator->create_question('shortanswer', null, array('category' => $cat->id));
+        $numq = $questiongenerator->create_question('numerical', null, array('category' => $cat->id));
+
+        // Add random question to the quiz.
+        quiz_add_random_questions($quiz, 0, $cat->id, 1, false);
+
+        // Make a user to do the quiz.
+
+        $user1 = $this->getDataGenerator()->create_user();
+        $this->setUser($user1);
+
+        $quizobj = quiz::create($quiz->id, $user1->id);
+
+        // Start the attempt.
+
+        $quba = question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
+        $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
+
+        $timenow = time();
+        $attempt = quiz_create_attempt($quizobj, 1, false, $timenow);
+
+        quiz_attempt_start_new($quizobj, $quba, $attempt, 1, $timenow);
+
+        quiz_attempt_save_started($quba, $attempt);
+
+        // Process some responses from the student.
+
+        /* @var quiz_attempt $attemptobj */
+        $attemptobj = quiz_attempt::create($attempt->id);
+
+        $selectedquestionid = $quba->get_question_attempt(1)->get_question()->id;
+        if ($selectedquestionid == $numq->id) {
+            $tosubmit = array(1 => array('answer' => '3.14'));
+        } else {
+            $tosubmit = array(1 => array('answer' => 'frog'));
+        }
+
+        $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
+
+        // Finish the attempt.
+
+        $attemptobj = quiz_attempt::create($attempt->id);
+        $attemptobj->process_finish($timenow, false);
+
+        // Re-load quiz attempt data.
+
+        $attemptobj = quiz_attempt::create($attempt->id);
+
+        // Check that results are stored as expected.
+
+        $this->assertEquals(1, $attemptobj->get_attempt_number());
+        $this->assertEquals(1, $attemptobj->get_sum_marks());
         $this->assertEquals(true, $attemptobj->is_finished());
         $this->assertEquals($timenow, $attemptobj->get_submitted_date());
         $this->assertEquals($user1->id, $attemptobj->get_userid());

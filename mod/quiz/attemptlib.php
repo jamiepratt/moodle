@@ -1330,15 +1330,24 @@ class quiz_attempt {
     /**
      * Process all the actions that were submitted as part of the current request.
      *
-     * @param int $timestamp the timestamp that should be stored as the modifed
-     * time in the database for these actions. If null, will use the current time.
+     * @param int  $timestamp  the timestamp that should be stored as the modifed
+     *                         time in the database for these actions. If null, will use the current time.
+     * @param bool $becomingoverdue
+     * @param array|null $simulatedresponsedata If not null, then we are testing, and this is an array of simulated data, keys are slot
+     *                                          nos and values are arrays representing student responses which will be passed to
+     *                                          question_definition::transform_response method and then have the appropriate prefix
+     *                                          added.
      */
-    public function process_submitted_actions($timestamp, $becomingoverdue = false, $postdata = null) {
+    public function process_submitted_actions($timestamp, $becomingoverdue = false, $simulatedresponsedata = null) {
         global $DB;
 
         $transaction = $DB->start_delegated_transaction();
 
-        $this->quba->process_all_actions($timestamp, $postdata);
+        if ($simulatedresponsedata !== null) {
+            $simulatedpostdata = $this->quba->get_post_data($simulatedresponsedata);
+        }
+
+        $this->quba->process_all_actions($timestamp, $simulatedpostdata);
         question_engine::save_questions_usage_by_activity($this->quba);
 
         $this->attempt->timemodified = $timestamp;
