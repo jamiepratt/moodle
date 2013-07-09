@@ -194,6 +194,13 @@ class qtype_multichoice_single_question extends qtype_multichoice_base {
         return array();
     }
 
+
+    public function transform_response($responsedata) {
+        $ansnumbertoanswerid = array_keys($this->answers);
+        $ansid = $ansnumbertoanswerid[$responsedata['answer']];
+        return array('answer' => array_search($ansid, $this->order));
+    }
+
     public function is_same_response(array $prevresponse, array $newresponse) {
         return question_utils::arrays_same_at_key($prevresponse, $newresponse, 'answer');
     }
@@ -333,6 +340,17 @@ class qtype_multichoice_multi_question extends qtype_multichoice_base {
             }
         }
         return $response;
+    }
+
+    public function transform_response($responsedata) {
+        $postdata = array();
+        $ansidtochoiceno = array_flip($this->order);
+        ksort($ansidtochoiceno, SORT_NUMERIC);
+        $ansnotochoiceno = array_values($ansidtochoiceno);
+        foreach ($responsedata as $ansno => $checked) {
+            $postdata[$this->field($ansnotochoiceno[$ansno])] = $checked;
+        }
+        return $postdata;
     }
 
     public function is_same_response(array $prevresponse, array $newresponse) {
