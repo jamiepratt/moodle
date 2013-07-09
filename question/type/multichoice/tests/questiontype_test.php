@@ -102,58 +102,61 @@ class qtype_multichoice_test extends advanced_testcase {
         ), $this->qtype->get_possible_responses($q));
     }
 
-    public function test_question_saving_two_of_four() {
+    public function test_question_saving() {
         $this->resetAfterTest(true);
         $this->setAdminUser();
 
-        $questiondata = test_question_maker::get_question_data('multichoice');
-        $formdata = test_question_maker::get_question_form_data('multichoice');
+        foreach (array('two_of_four', 'one_of_four') as $which) {
+            $questiondata = test_question_maker::get_question_data('multichoice', $which);
+            $formdata = test_question_maker::get_question_form_data('multichoice', $which);
 
-        $generator = $this->getDataGenerator()->get_plugin_generator('core_question');
-        $cat = $generator->create_question_category(array());
+            $generator = $this->getDataGenerator()->get_plugin_generator('core_question');
+            $cat = $generator->create_question_category(array());
 
-        $formdata->category = "{$cat->id},{$cat->contextid}";
-        qtype_multichoice_edit_form::mock_submit((array)$formdata);
+            $formdata->category = "{$cat->id},{$cat->contextid}";
+            qtype_multichoice_edit_form::mock_submit((array)$formdata);
 
-        $form = qtype_multichoice_test_helper::get_question_editing_form($cat, $questiondata);
+            $form = qtype_multichoice_test_helper::get_question_editing_form($cat, $questiondata);
 
-        $this->assertTrue($form->is_validated());
+            $this->assertTrue($form->is_validated());
 
-        $fromform = $form->get_data();
+            $fromform = $form->get_data();
 
-        $returnedfromsave = $this->qtype->save_question($questiondata, $fromform);
-        $actualquestionsdata = question_load_questions(array($returnedfromsave->id));
-        $actualquestiondata = end($actualquestionsdata);
+            $returnedfromsave = $this->qtype->save_question($questiondata, $fromform);
+            $actualquestionsdata = question_load_questions(array($returnedfromsave->id));
+            $actualquestiondata = end($actualquestionsdata);
 
-        foreach ($questiondata as $property => $value) {
-            if (!in_array($property, array('id', 'version', 'timemodified', 'timecreated', 'options', 'hints', 'stamp'))) {
-                $this->assertAttributeEquals($value, $property, $actualquestiondata);
+            foreach ($questiondata as $property => $value) {
+                if (!in_array($property, array('id', 'version', 'timemodified', 'timecreated', 'options', 'hints', 'stamp'))) {
+                    $this->assertAttributeEquals($value, $property, $actualquestiondata);
+                }
             }
-        }
 
-        foreach ($questiondata->options as $optionname => $value) {
-            if (!in_array($optionname, array('answers'))) {
-                $this->assertAttributeEquals($value, $optionname, $actualquestiondata->options);
+            foreach ($questiondata->options as $optionname => $value) {
+                if (!in_array($optionname, array('answers'))) {
+                    $this->assertAttributeEquals($value, $optionname, $actualquestiondata->options);
+                }
             }
-        }
 
-        foreach ($questiondata->hints as $hint) {
-            $actualhint = array_shift($actualquestiondata->hints);
-            foreach ($hint as $property => $value) {
-                if (!in_array($property, array('id', 'questionid', 'options'))) {
-                    $this->assertAttributeEquals($value, $property, $actualhint);
+            foreach ($questiondata->hints as $hint) {
+                $actualhint = array_shift($actualquestiondata->hints);
+                foreach ($hint as $property => $value) {
+                    if (!in_array($property, array('id', 'questionid', 'options'))) {
+                        $this->assertAttributeEquals($value, $property, $actualhint);
+                    }
+                }
+            }
+
+            foreach ($questiondata->options->answers as $answer) {
+                $actualanswer = array_shift($actualquestiondata->options->answers);
+                foreach ($answer as $ansproperty => $ansvalue) {
+                    // This question does not use 'answerformat', will ignore it.
+                    if (!in_array($ansproperty, array('id', 'question', 'answerformat'))) {
+                        $this->assertAttributeEquals($ansvalue, $ansproperty, $actualanswer);
+                    }
                 }
             }
         }
 
-        foreach ($questiondata->options->answers as $answer) {
-            $actualanswer = array_shift($actualquestiondata->options->answers);
-            foreach ($answer as $ansproperty => $ansvalue) {
-                // This question does not use 'answerformat', will ignore it.
-                if (!in_array($ansproperty, array('id', 'question', 'answerformat'))) {
-                    $this->assertAttributeEquals($ansvalue, $ansproperty, $actualanswer);
-                }
-            }
-        }
     }
 }
