@@ -227,14 +227,33 @@ class qtype_random extends question_type {
                 continue;
             }
 
-            $question = question_bank::load_question($questionid, $allowshuffle);
-            $this->set_selected_question_name($question, $questiondata->name);
-            return $question;
+            return $this->load_other_question($questiondata, $allowshuffle, $questionid);
         }
         return null;
     }
 
     public function get_random_guess_score($questiondata) {
         return null;
+    }
+
+    /**
+     * Used to load a selected random question. Made public for tests.
+     *
+     * @param object $questiondata the data defining a random question.
+     * @param bool $allowshuffle if false, then any shuffle option on the selected quetsion is disabled.
+     * @param integer $questionid the id of the other question to load.
+     * @return question_definition|null the definition of the question that was selected.
+     * @throws moodle_exception if the question with id $questionid is not one that would be normally selected.
+     */
+    public function load_other_question($questiondata, $allowshuffle, $questionid) {
+        $available = $this->get_available_questions_from_category($questiondata->category,
+                                                                  !empty($questiondata->questiontext));
+        if (in_array($questionid, $available)) {
+            $question = question_bank::load_question($questionid, $allowshuffle);
+            $this->set_selected_question_name($question, $questiondata->name);
+            return $question;
+        } else {
+            throw new moodle_exception('selectedsubquestionnotavailableinrandomquestion', 'quiz', '', null, $questiondata);
+        }
     }
 }

@@ -750,6 +750,7 @@ $string['select'] = 'Select';
 $string['selectall'] = 'Select all';
 $string['selectcategory'] = 'Select category';
 $string['selectedattempts'] = 'Selected attempts...';
+$string['selectedsubquestionnotavailableinrandomquestion'] = 'The selected subquestion is not available in this category.';
 $string['selectnone'] = 'Deselect all';
 $string['selectquestiontype'] = '-- Select question type --';
 $string['serveradded'] = 'Server added';

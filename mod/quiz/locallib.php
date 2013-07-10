@@ -137,18 +137,20 @@ function quiz_create_attempt(quiz $quizobj, $attemptnumber, $lastattempt, $timen
 
     return $attempt;
 }
+
 /**
  * Start a normal, new, quiz attempt.
  *
- * @param quiz                          $quizobj            the quiz object to start an attempt for.
- * @param question_usage_by_activity    $quba
- * @param object                        $attempt
- * @param integer                       $attemptnumber      starting from 1
- * @param integer                       $timenow            the attempt start time
+ * @param quiz                       $quizobj            the quiz object to start an attempt for.
+ * @param question_usage_by_activity $quba
+ * @param object                     $attempt
+ * @param integer                    $attemptnumber      starting from 1
+ * @param integer                    $timenow            the attempt start time
+ * @param array                      $questionids        for randomly selected questions,
+ * @throws moodle_exception
  * @return object                       modified attempt object
- * @throws moodle_exception             if a random question exhausts the available questions
  */
-function quiz_attempt_start_new($quizobj, $quba, $attempt, $attemptnumber, $timenow) {
+function quiz_attempt_start_new($quizobj, $quba, $attempt, $attemptnumber, $timenow, $questionids = array()) {
     // Fully load all the questions in this quiz.
     $quizobj->preload_questions();
     $quizobj->load_questions();
@@ -164,11 +166,20 @@ function quiz_attempt_start_new($quizobj, $quba, $attempt, $attemptnumber, $time
             $question = question_bank::make_question($questiondata);
 
         } else {
-            $question = question_bank::get_qtype('random')->choose_other_question(
-                $questiondata, $questionsinuse, $quizobj->get_quiz()->shuffleanswers);
-            if (is_null($question)) {
-                throw new moodle_exception('notenoughrandomquestions', 'quiz',
-                                           $quizobj->view_url(), $questiondata);
+            $shuffleanswers = $quizobj->get_quiz()->shuffleanswers;
+            if (!isset($questionids[$quba->next_slot_number()])) {
+                $question = question_bank::get_qtype('random')->choose_other_question($questiondata,
+                                                                                      $questionsinuse,
+                                                                                      $shuffleanswers);
+                if (is_null($question)) {
+                    throw new moodle_exception('notenoughrandomquestions', 'quiz',
+                                               $quizobj->view_url(), $questiondata);
+                }
+            } else {
+                $questionid = $questionids[$quba->next_slot_number()];
+                $question = question_bank::get_qtype('random')->load_other_question($questiondata,
+                                                                                    $shuffleanswers,
+                                                                                    $questionid);
             }
         }
 
