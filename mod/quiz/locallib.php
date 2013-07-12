@@ -150,7 +150,8 @@ function quiz_create_attempt(quiz $quizobj, $attemptnumber, $lastattempt, $timen
  * @throws moodle_exception
  * @return object                       modified attempt object
  */
-function quiz_attempt_start_new($quizobj, $quba, $attempt, $attemptnumber, $timenow, $questionids = array()) {
+function quiz_attempt_start_new($quizobj, $quba, $attempt, $attemptnumber, $timenow,
+                                $questionids = array(), $forcedvariantsbyslot = array()) {
     // Fully load all the questions in this quiz.
     $quizobj->preload_questions();
     $quizobj->load_questions();
@@ -190,8 +191,17 @@ function quiz_attempt_start_new($quizobj, $quba, $attempt, $attemptnumber, $time
     } else {
         $variantoffset = $attemptnumber;
     }
-    $quba->start_all_questions(
-        new question_variant_pseudorandom_no_repeats_strategy($variantoffset), $timenow);
+
+    $normalvariantselectionstrategy = new question_variant_pseudorandom_no_repeats_strategy($variantoffset);
+    if (empty($forcedvariantsbyslot)) {
+        $quba->start_all_questions($normalvariantselectionstrategy, $timenow);
+    } else {
+        $forcedvariantsbyseed =
+            question_variant_forced_choices_selection_strategy::prepare_forced_choices_array($forcedvariantsbyslot, $quba);
+        $forcedselectionstrategy =
+            new question_variant_forced_choices_selection_strategy($forcedvariantsbyseed, $normalvariantselectionstrategy);
+        $quba->start_all_questions($forcedselectionstrategy, $timenow);
+    }
 
     // Update attempt layout.
     $newlayout = array();
