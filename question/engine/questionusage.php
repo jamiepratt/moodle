@@ -469,18 +469,27 @@ class question_usage_by_activity {
 
     /**
      * Start the attempt at all questions that has been added to this usage.
-     * @param question_variant_selection_strategy how to pick which variant of each question to use.
-     * @param int $timestamp optional, the timstamp to record for this action. Defaults to now.
+     * @param question_variant_selection_strategy|array $variantsarrayorstrategy either use array or strategy to pick which
+     *                                                                      variant of each question to use.
+     * @param int $timestamp optional, the time stamp to record for this action. Defaults to now.
      * @param int $userid optional, the user to attribute this action to. Defaults to the current user.
      */
-    public function start_all_questions(question_variant_selection_strategy $variantstrategy = null,
+    public function start_all_questions($variantsarrayorstrategy = null,
             $timestamp = null, $userid = null) {
-        if (is_null($variantstrategy)) {
-            $variantstrategy = new question_variant_random_strategy();
+        if (is_null($variantsarrayorstrategy)) {
+            $variantsarrayorstrategy = new question_variant_random_strategy();
         }
 
-        foreach ($this->questionattempts as $qa) {
-            $qa->start($this->preferredbehaviour, $qa->select_variant($variantstrategy));
+        foreach ($this->questionattempts as $slot => $qa) {
+            if (is_array($variantsarrayorstrategy)) {
+                if (isset($variantsarrayorstrategy[$slot])) {
+                    $qa->start($this->preferredbehaviour, $variantsarrayorstrategy[$slot]);
+                } else {
+                    $qa->start($this->preferredbehaviour, 1);
+                }
+            } else {
+                $qa->start($this->preferredbehaviour, $qa->select_variant($variantsarrayorstrategy));
+            }
             $this->observer->notify_attempt_modified($qa);
         }
     }

@@ -147,10 +147,14 @@ function quiz_create_attempt(quiz $quizobj, $attemptnumber, $lastattempt, $timen
  * @param integer                    $attemptnumber      starting from 1
  * @param integer                    $timenow            the attempt start time
  * @param array                      $questionids        for randomly selected questions,
+ *                                                          you can specify the sub questionid for testing, keys are slot no.
+ * @param array|null                 $variants           for questions with variants, you can specify the variant no for testing,
+ *                                                          keys of array are slot no, values are variant no,
+ *                                                          null defaults to normal random variant picking strategies.
  * @throws moodle_exception
  * @return object                       modified attempt object
  */
-function quiz_attempt_start_new($quizobj, $quba, $attempt, $attemptnumber, $timenow, $questionids = array()) {
+function quiz_attempt_start_new($quizobj, $quba, $attempt, $attemptnumber, $timenow, $questionids = array(), $variants = null) {
     // Fully load all the questions in this quiz.
     $quizobj->preload_questions();
     $quizobj->load_questions();
@@ -188,13 +192,17 @@ function quiz_attempt_start_new($quizobj, $quba, $attempt, $attemptnumber, $time
     }
 
     // Start all the questions.
-    if ($attempt->preview) {
-        $variantoffset = rand(1, 100);
+
+    if ($variants !== null) {
+        $quba->start_all_questions($variants, $timenow);
     } else {
-        $variantoffset = $attemptnumber;
+        if ($attempt->preview) {
+            $variantoffset = rand(1, 100);
+        } else {
+            $variantoffset = $attemptnumber;
+        }
+        $quba->start_all_questions(new question_variant_pseudorandom_no_repeats_strategy($variantoffset), $timenow);
     }
-    $quba->start_all_questions(
-        new question_variant_pseudorandom_no_repeats_strategy($variantoffset), $timenow);
 
     // Update attempt layout.
     $newlayout = array();
