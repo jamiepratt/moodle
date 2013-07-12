@@ -49,7 +49,6 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         $this->resetAfterTest(true);
 
         // Make a quiz.
-
         /* @var mod_quiz_generator $quizgenerator */
         $quizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_quiz');
 
@@ -57,7 +56,6 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
                                                       'sumgrades' => 2));
 
         // Create a couple of questions.
-
         /* @var core_question_generator $questiongenerator */
         $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
 
@@ -66,19 +64,16 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         $numq = $questiongenerator->create_question('numerical', null, array('category' => $cat->id));
 
         // Add them to the quiz.
-
         quiz_add_quiz_question($saq->id, $quiz);
         quiz_add_quiz_question($numq->id, $quiz);
 
         // Make a user to do the quiz.
-
         $user1 = $this->getDataGenerator()->create_user();
         $this->setUser($user1);
 
         $quizobj = quiz::create($quiz->id, $user1->id);
 
         // Start the attempt.
-
         $quba = question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
         $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
 
@@ -90,7 +85,6 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         quiz_attempt_save_started($quba, $attempt);
 
         // Process some responses from the student.
-
         $attemptobj = quiz_attempt::create($attempt->id);
 
         $tosubmit = array(1 => array('answer' => 'frog'),
@@ -99,16 +93,13 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
 
         // Finish the attempt.
-
         $attemptobj = quiz_attempt::create($attempt->id);
         $attemptobj->process_finish($timenow, false);
 
         // Re-load quiz attempt data.
-
         $attemptobj = quiz_attempt::create($attempt->id);
 
         // Check that results are stored as expected.
-
         $this->assertEquals(1, $attemptobj->get_attempt_number());
         $this->assertEquals(2, $attemptobj->get_sum_marks());
         $this->assertEquals(true, $attemptobj->is_finished());
@@ -116,13 +107,11 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         $this->assertEquals($user1->id, $attemptobj->get_userid());
 
         // Check quiz grades.
-
         $grades = quiz_get_user_grades($quiz, $user1->id);
         $grade = array_shift($grades);
         $this->assertEquals(100.0, $grade->rawgrade);
 
         // Check grade book.
-
         $gradebookgrades = grade_get_grades($SITE->id, 'mod', 'quiz', $quiz->id, $user1->id);
         $gradebookitem = array_shift($gradebookgrades->items);
         $gradebookgrade = array_shift($gradebookitem->grades);
@@ -140,7 +129,6 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         $this->setAdminUser();
 
         // Make a quiz.
-
         /* @var mod_quiz_generator $quizgenerator */
         $quizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_quiz');
 
@@ -151,7 +139,6 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
 
         // Add two questions to question category.
-
         $cat = $questiongenerator->create_question_category();
         $saq = $questiongenerator->create_question('shortanswer', null, array('category' => $cat->id));
         $numq = $questiongenerator->create_question('numerical', null, array('category' => $cat->id));
@@ -160,7 +147,6 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         quiz_add_random_questions($quiz, 0, $cat->id, 1, false);
 
         // Make another category.
-
         $cat2 = $questiongenerator->create_question_category();
         $match = $questiongenerator->create_question('match', null, array('category' => $cat->id));
 
@@ -174,7 +160,6 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
 
         quiz_add_quiz_question($multichoicesingle->id, $quiz, 0);
 
-
         foreach (array($saq->id => 'frog', $numq->id => '3.14') as $randomqidtoselect => $randqanswer) {
             // Make a new user to do the quiz each loop.
             $user1 = $this->getDataGenerator()->create_user();
@@ -183,7 +168,6 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
             $quizobj = quiz::create($quiz->id, $user1->id);
 
             // Start the attempt.
-
             $quba = question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
             $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
 
@@ -195,7 +179,6 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
             quiz_attempt_save_started($quba, $attempt);
 
             // Process some responses from the student.
-
             /* @var quiz_attempt $attemptobj */
             $attemptobj = quiz_attempt::create($attempt->id);
 
@@ -214,16 +197,13 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
             $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
 
             // Finish the attempt.
-
             $attemptobj = quiz_attempt::create($attempt->id);
             $attemptobj->process_finish($timenow, false);
 
             // Re-load quiz attempt data.
-
             $attemptobj = quiz_attempt::create($attempt->id);
 
             // Check that results are stored as expected.
-
             $this->assertEquals(1, $attemptobj->get_attempt_number());
             $this->assertEquals(4, $attemptobj->get_sum_marks());
             $this->assertEquals(true, $attemptobj->is_finished());
@@ -231,20 +211,17 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
             $this->assertEquals($user1->id, $attemptobj->get_userid());
 
             // Check quiz grades.
-
             $grades = quiz_get_user_grades($quiz, $user1->id);
             $grade = array_shift($grades);
             $this->assertEquals(100.0, $grade->rawgrade);
 
             // Check grade book.
-
             $gradebookgrades = grade_get_grades($SITE->id, 'mod', 'quiz', $quiz->id, $user1->id);
             $gradebookitem = array_shift($gradebookgrades->items);
             $gradebookgrade = array_shift($gradebookitem->grades);
             $this->assertEquals(100, $gradebookgrade->grade);
         }
     }
-
 
     public function get_correct_response_for_variants() {
         return array(array(1, 9.9), array(2, 8.5), array(5, 14.2), array(10, 6.8, true));
@@ -279,7 +256,6 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
             $calc = $questiongenerator->create_question('calculatedsimple', 'sumwithvariants', array('category' => $cat->id));
             quiz_add_quiz_question($calc->id, $this->quizwithvariants, 0);
         }
-
 
         // Make a new user to do the quiz.
         $user1 = $this->getDataGenerator()->create_user();
@@ -340,7 +316,6 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         $this->setAdminUser();
 
         // Setup course, user and groups
-
         $course = $this->getDataGenerator()->create_course();
         $user1 = $this->getDataGenerator()->create_user();
         $studentrole = $DB->get_record('role', array('shortname'=>'student'));
@@ -358,7 +333,6 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         $quiz_generator = $this->getDataGenerator()->get_plugin_generator('mod_quiz');
 
         // Basic quiz settings
-
         $quiz = $quiz_generator->create_instance(array('course'=>$course->id, 'timeclose'=>1200, 'timelimit'=>600));
         $attemptid = $DB->insert_record('quiz_attempts', array('quiz'=>$quiz->id, 'userid'=>$user1->id, 'state'=>'inprogress', 'timestart'=>100, 'timecheckstate'=>0, 'layout'=>'', 'uniqueid'=>$uniqueid++));
         $usertimes[$attemptid] = array('timeclose'=>1200, 'timelimit'=>600, 'message'=>'Test1A');
@@ -380,7 +354,6 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         $usertimes[$attemptid] = array('timeclose'=>0, 'timelimit'=>0, 'message'=>'Test1E');
 
         // Group overrides
-
         $quiz = $quiz_generator->create_instance(array('course'=>$course->id, 'timeclose'=>1200, 'timelimit'=>0));
         $attemptid = $DB->insert_record('quiz_attempts', array('quiz'=>$quiz->id, 'userid'=>$user1->id, 'state'=>'inprogress', 'timestart'=>100, 'timecheckstate'=>0, 'layout'=>'', 'uniqueid'=>$uniqueid++));
         $DB->insert_record('quiz_overrides', array('quiz'=>$quiz->id, 'groupid'=>$group1->id, 'timeclose'=>1300, 'timelimit'=>null));
@@ -421,7 +394,6 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         $usertimes[$attemptid] = array('timeclose'=>1200, 'timelimit'=>600, '', 'message'=>'Test2I');
 
         // Multiple group overrides
-
         $quiz = $quiz_generator->create_instance(array('course'=>$course->id, 'timeclose'=>1200, 'timelimit'=>600));
         $DB->insert_record('quiz_overrides', array('quiz'=>$quiz->id, 'groupid'=>$group1->id, 'timeclose'=>1300, 'timelimit'=>501));
         $DB->insert_record('quiz_overrides', array('quiz'=>$quiz->id, 'groupid'=>$group2->id, 'timeclose'=>1301, 'timelimit'=>500));
@@ -480,7 +452,6 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         $usertimes[$attemptid] = array('timeclose'=>0, 'timelimit'=>501, '', 'message'=>'Test3N');
 
         // User overrides
-
         $quiz = $quiz_generator->create_instance(array('course'=>$course->id, 'timeclose'=>1200, 'timelimit'=>600));
         $DB->insert_record('quiz_overrides', array('quiz'=>$quiz->id, 'groupid'=>$group1->id, 'timeclose'=>1300, 'timelimit'=>700));
         $DB->insert_record('quiz_overrides', array('quiz'=>$quiz->id, 'userid'=>$user1->id, 'timeclose'=>1201, 'timelimit'=>601));
@@ -546,7 +517,6 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         $usertimes[$attemptid] = array('timeclose'=>1300, 'timelimit'=>700, '', 'message'=>'Test4P');
 
         // Attempt state overdue
-
         $quiz = $quiz_generator->create_instance(array('course'=>$course->id, 'timeclose'=>1200, 'timelimit'=>600, 'overduehandling'=>'graceperiod', 'graceperiod'=>250));
         $attemptid = $DB->insert_record('quiz_attempts', array('quiz'=>$quiz->id, 'userid'=>$user1->id, 'state'=>'overdue', 'timestart'=>100, 'timecheckstate'=>0, 'layout'=>'', 'uniqueid'=>$uniqueid++));
         $usertimes[$attemptid] = array('timeclose'=>1200, 'timelimit'=>600, '', 'message'=>'Test5A');
@@ -558,7 +528,6 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         //
         // Test quiz_update_open_attempts()
         //
-
         quiz_update_open_attempts(array('courseid'=>$course->id));
         foreach ($usertimes as $attemptid=>$times) {
             $attempt = $DB->get_record('quiz_attempts', array('id'=>$attemptid));
@@ -583,7 +552,6 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         //
         // Test get_list_of_overdue_attempts()
         //
-
         $overduehander = new mod_quiz_overdue_attempt_updater();
 
         $attempts = $overduehander->get_list_of_overdue_attempts(100000); // way in the future
@@ -618,7 +586,6 @@ class mod_quiz_attempt_testcase extends advanced_testcase {
         $this->setAdminUser();
 
         // Setup course, user and groups
-
         $course = $this->getDataGenerator()->create_course();
         $user1 = $this->getDataGenerator()->create_user();
         $studentrole = $DB->get_record('role', array('shortname'=>'student'));

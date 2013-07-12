@@ -137,18 +137,22 @@ function quiz_create_attempt(quiz $quizobj, $attemptnumber, $lastattempt, $timen
 
     return $attempt;
 }
+
 /**
  * Start a normal, new, quiz attempt.
  *
- * @param quiz    $quizobj            the quiz object to start an attempt for.
- * @param question_usage_by_activity    $quba
- * @param object  $attempt
- * @param integer $attemptnumber      starting from 1
- * @param integer $timenow            the attempt start time
- * @param array   $questionids slot number => question id. Used for random questions, to force the choice of a particular actual
- *                              question. Intended for testing purposes only.
+ * @param quiz      $quizobj            the quiz object to start an attempt for.
+ * @param question_usage_by_activity $quba
+ * @param object    $attempt
+ * @param integer   $attemptnumber      starting from 1
+ * @param integer   $timenow            the attempt start time
+ * @param array     $questionids        slot number => question id. Used for random questions, to force the choice
+ *                                        of a particular actual question. Intended for testing purposes only.
+ * @param array     $forcedvariantsbyslot slot number => variant. Used for questions with variants,
+ *                                          to force the choice of a particular variant. Intended for testing
+ *                                          purposes only.
  * @throws moodle_exception
- * @return object                       modified attempt object
+ * @return object   modified attempt object
  */
 function quiz_attempt_start_new($quizobj, $quba, $attempt, $attemptnumber, $timenow,
                                 $questionids = array(), $forcedvariantsbyslot = array()) {
