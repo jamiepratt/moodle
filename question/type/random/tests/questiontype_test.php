@@ -72,8 +72,16 @@ class qtype_random_test extends advanced_testcase {
 
         $randomquestion = $generator->create_question('random', null, array('category' => $cat->id));
 
+        $expectedids = array($question1->id, $question2->id);
+        $actualids = question_bank::get_qtype('random')->get_available_questions_from_category($cat->id, 0);
+        sort($expectedids);
+        sort($actualids);
+        $this->assertEquals($expectedids, $actualids);
+
         $q = question_bank::load_question($randomquestion->id);
 
         $this->assertContains($q->id, array($question1->id, $question2->id));
+
+        question_bank::get_qtype('random')->clear_caches_after_testing();
     }
 }
