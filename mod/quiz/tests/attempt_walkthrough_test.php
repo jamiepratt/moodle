@@ -68,7 +68,6 @@ class mod_quiz_attempt_walkthrough_testcase extends advanced_testcase {
 
         // Make a user to do the quiz.
         $user1 = $this->getDataGenerator()->create_user();
-        $this->setUser($user1);
 
         $quizobj = quiz::create($quiz->id, $user1->id);
 
@@ -77,7 +76,7 @@ class mod_quiz_attempt_walkthrough_testcase extends advanced_testcase {
         $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
 
         $timenow = time();
-        $attempt = quiz_create_attempt($quizobj, 1, false, $timenow);
+        $attempt = quiz_create_attempt($quizobj, 1, false, $timenow, $user1->id);
 
         quiz_start_new_attempt($quizobj, $quba, $attempt, 1, $timenow);
 
@@ -172,7 +171,7 @@ class mod_quiz_attempt_walkthrough_testcase extends advanced_testcase {
             $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
 
             $timenow = time();
-            $attempt = quiz_create_attempt($quizobj, 1, false, $timenow);
+            $attempt = quiz_create_attempt($quizobj, 1, false, $timenow, $user1->id);
 
             quiz_start_new_attempt($quizobj, $quba, $attempt, 1, $timenow, array(1 => $randomqidtoselect));
 
@@ -258,7 +257,6 @@ class mod_quiz_attempt_walkthrough_testcase extends advanced_testcase {
 
         // Make a new user to do the quiz.
         $user1 = $this->getDataGenerator()->create_user();
-        $this->setUser($user1);
         $quizobj = quiz::create($this->quizwithvariants->id, $user1->id);
 
         // Start the attempt.
@@ -266,7 +264,7 @@ class mod_quiz_attempt_walkthrough_testcase extends advanced_testcase {
         $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
 
         $timenow = time();
-        $attempt = quiz_create_attempt($quizobj, 1, false, $timenow);
+        $attempt = quiz_create_attempt($quizobj, 1, false, $timenow, $user1->id);
         // Select variant.
         quiz_start_new_attempt($quizobj, $quba, $attempt, 1, $timenow, array(), array(1 => $variantno));
         quiz_attempt_save_started($quizobj, $quba, $attempt);

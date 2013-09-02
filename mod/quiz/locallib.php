@@ -85,13 +85,12 @@ define('QUIZ_SHOWIMAGE_LARGE', 2);
  * @param object $lastattempt the previous attempt by this user, if any. Only needed
  *         if $attemptnumber > 1 and $quiz->attemptonlast is true.
  * @param int $timenow the time the attempt was started at.
+ * @param int $userid  the id of the user attempting this quiz.
  * @param bool $ispreview whether this new attempt is a preview.
  *
  * @return object the newly created attempt object.
  */
-function quiz_create_attempt(quiz $quizobj, $attemptnumber, $lastattempt, $timenow, $ispreview = false) {
-    global $USER;
-
+function quiz_create_attempt(quiz $quizobj, $attemptnumber, $lastattempt, $timenow, $userid, $ispreview = false) {
     $quiz = $quizobj->get_quiz();
     if ($quiz->sumgrades < 0.000005 && $quiz->grade > 0.000005) {
         throw new moodle_exception('cannotstartgradesmismatch', 'quiz',
@@ -103,7 +102,7 @@ function quiz_create_attempt(quiz $quizobj, $attemptnumber, $lastattempt, $timen
         // We are not building on last attempt so create a new attempt.
         $attempt = new stdClass();
         $attempt->quiz = $quiz->id;
-        $attempt->userid = $USER->id;
+        $attempt->userid = $userid;
         $attempt->preview = 0;
         $attempt->layout = quiz_clean_layout($quiz->questions, true);
         if ($quiz->shufflequestions) {
