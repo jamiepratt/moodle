@@ -792,7 +792,7 @@ class quiz_statistics_report extends quiz_default_report {
         }
 
         $subquestions = array();
-        $questionstats = $DB->get_records('quiz_question_statistics',
+        $questionstats = $DB->get_records('question_statistics',
                 array('quizstatisticsid' => $quizstats->id));
 
         $subquestionstats = array();
@@ -826,8 +826,7 @@ class quiz_statistics_report extends quiz_default_report {
      * @param array $questions The questions, with an additional _stats field.
      * @param array $subquestions The subquestions, if any, with an additional _stats field.
      */
-    protected function cache_stats($quizid, $currentgroup,
-            $quizstats, $questions, $subquestions) {
+    protected function cache_stats($quizid, $currentgroup, $quizstats, $questions, $subquestions) {
         global $DB;
 
         $toinsert = clone($quizstats);
@@ -848,12 +847,12 @@ class quiz_statistics_report extends quiz_default_report {
 
         foreach ($questions as $question) {
             $question->_stats->quizstatisticsid = $quizstats->id;
-            $DB->insert_record('quiz_question_statistics', $question->_stats, false);
+            $DB->insert_record('question_statistics', $question->_stats, false);
         }
 
         foreach ($subquestions as $subquestion) {
             $subquestion->_stats->quizstatisticsid = $quizstats->id;
-            $DB->insert_record('quiz_question_statistics', $subquestion->_stats, false);
+            $DB->insert_record('question_statistics', $subquestion->_stats, false);
         }
 
         return $quizstats->id;
@@ -1024,9 +1023,9 @@ class quiz_statistics_report extends quiz_default_report {
 
         list($todeletesql, $todeleteparams) = $DB->get_in_or_equal(array_keys($todelete));
 
-        $DB->delete_records_select('quiz_question_statistics',
+        $DB->delete_records_select('question_statistics',
                 'quizstatisticsid ' . $todeletesql, $todeleteparams);
-        $DB->delete_records_select('quiz_question_response_stats',
+        $DB->delete_records_select('question_response_analysis',
                 'quizstatisticsid ' . $todeletesql, $todeleteparams);
         $DB->delete_records_select('quiz_statistics',
                 'id ' . $todeletesql, $todeleteparams);
