@@ -15,10 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Quiz statistics report calculations class.
+ * Question usage statistics calculations class. Used in the quiz statistics report but also available for use elsewhere.
  *
  * @package   quiz_statistics
- * @copyright 2008 Jamie Pratt
+ * @copyright 2013 Open University
+ * @author    Jamie Pratt <me@jamiep.org>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -29,7 +30,8 @@ defined('MOODLE_INTERNAL') || die();
 /**
  * This class has methods to compute the question statistics from the raw data.
  *
- * @copyright 2008 Jamie Pratt
+ * @copyright 2013 Open University
+ * @author    Jamie Pratt <me@jamiep.org>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class quiz_statistics_question_stats {

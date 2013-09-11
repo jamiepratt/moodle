@@ -19,7 +19,8 @@
  * question.
  *
  * @package   quiz_statistics
- * @copyright 2010 The Open University
+ * @copyright 2013 Open University
+ * @author    Jamie Pratt <me@jamiep.org>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -31,7 +32,8 @@ defined('MOODLE_INTERNAL') || die();
  * This class can store and compute the analysis of the responses to a particular
  * question.
  *
- * @copyright 2010 The Open University
+ * @copyright 2013 Open University
+ * @author    Jamie Pratt <me@jamiep.org>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class quiz_statistics_response_analyser {
@@ -164,17 +166,15 @@ class quiz_statistics_response_analyser {
     }
 
     /**
-     * Store the computed response analysis in the quiz_question_response_stats
-     * table.
+     * Store the computed response analysis in the question_response_analysis table.
      * @param int $quizstatisticsid the cached quiz statistics to load the
      * data corresponding to.
-     * @return bool true if cached data was found in the database and loaded,
-     * otherwise false, to mean no data was loaded.
+     * @return bool true if cached data was found in the database and loaded, otherwise false, to mean no data was loaded.
      */
     public function load_cached($quizstatisticsid) {
         global $DB;
 
-        $rows = $DB->get_records('quiz_question_response_stats',
+        $rows = $DB->get_records('question_response_analysis',
                 array('quizstatisticsid' => $quizstatisticsid,
                         'questionid' => $this->questiondata->id));
         if (!$rows) {
@@ -191,9 +191,9 @@ class quiz_statistics_response_analyser {
     }
 
     /**
-     * Store the computed response analysis in the quiz_question_response_stats
-     * table.
-     * @param int $quizstatisticsid the cached quiz statistics this correspons to.
+     * Store the computed response analysis in the question_response_analysis table.
+     * @param int $quizstatisticsid the cached quiz statistics this corresponds to.
+     * @throws coding_exception
      */
     public function store_cached($quizstatisticsid) {
         global $DB;
@@ -218,7 +218,7 @@ class quiz_statistics_response_analyser {
                     $row->response = $response;
                     $row->rcount = $data->count;
                     $row->credit = $data->fraction;
-                    $DB->insert_record('quiz_question_response_stats', $row, false);
+                    $DB->insert_record('question_response_analysis', $row, false);
                 }
             }
         }

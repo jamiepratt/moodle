@@ -75,7 +75,7 @@ if ($quizstatistics->groupid && !in_array($quizstatistics->groupid, array_keys($
 
 // Load the rest of the required data.
 $questions = quiz_report_get_significant_questions($quiz);
-$questionstatistics = $DB->get_records_select('quiz_question_statistics',
+$questionstatistics = $DB->get_records_select('question_statistics',
         'quizstatisticsid = ? AND slot IS NOT NULL', array($quizstatistics->id));
 
 // Create the graph, and set the basic options.
