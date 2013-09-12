@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Unit tests for (some of) mod/quiz/report/statistics/qstats.php.
+ * Unit tests for (some of) /question/engine/statistics.php
  *
  * @package   quiz_statistics
  * @category  phpunit
@@ -28,18 +28,18 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once($CFG->libdir . '/questionlib.php');
-require_once($CFG->dirroot . '/mod/quiz/report/statistics/qstats.php');
+require_once($CFG->dirroot . '/question/engine/statistics.php');
 require_once($CFG->dirroot . '/mod/quiz/locallib.php');
 require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
 
 
 /**
- * Test helper subclass of quiz_statistics_question_stats
+ * Test helper subclass of question_statistics
  *
  * @copyright 2010 The Open University
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class testable_quiz_statistics_question_stats extends quiz_statistics_question_stats {
+class testable_quiz_statistics_question_stats extends question_statistics {
     public function set_step_data($states) {
         $this->lateststeps = $states;
     }
@@ -51,7 +51,7 @@ class testable_quiz_statistics_question_stats extends quiz_statistics_question_s
 
 
 /**
- * Unit tests for (some of) quiz_statistics_question_stats.
+ * Unit tests for (some of) question_statistics.
  *
  * @copyright 2008 Jamie Pratt
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later

@@ -15,12 +15,13 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Question usage statistics calculations class. Used in the quiz statistics report but also available for use elsewhere.
+ * Question statistics calculations class. Used in the quiz statistics report but also available for use elsewhere.
  *
- * @package   quiz_statistics
- * @copyright 2013 Open University
- * @author    Jamie Pratt <me@jamiep.org>
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    core
+ * @subpackage questionbank
+ * @copyright  2013 Open University
+ * @author     Jamie Pratt <me@jamiep.org>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 
@@ -34,7 +35,7 @@ defined('MOODLE_INTERNAL') || die();
  * @author    Jamie Pratt <me@jamiep.org>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class quiz_statistics_question_stats {
+class question_statistics {
     public $questions;
     public $subquestions = array();
 
