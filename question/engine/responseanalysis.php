@@ -18,10 +18,11 @@
  * This file contains the code to analyse all the responses to a particular
  * question.
  *
- * @package   quiz_statistics
- * @copyright 2013 Open University
- * @author    Jamie Pratt <me@jamiep.org>
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    core
+ * @subpackage questionbank
+ * @copyright  2013 Open University
+ * @author     Jamie Pratt <me@jamiep.org>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 
@@ -36,7 +37,7 @@ defined('MOODLE_INTERNAL') || die();
  * @author    Jamie Pratt <me@jamiep.org>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class quiz_statistics_response_analyser {
+class question_response_analyser {
     /** @var object the data from the database that defines the question. */
     protected $questiondata;
     protected $loaded = false;

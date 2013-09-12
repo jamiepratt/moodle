@@ -28,8 +28,8 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/mod/quiz/report/statistics/statistics_form.php');
 require_once($CFG->dirroot . '/mod/quiz/report/statistics/statistics_table.php');
 require_once($CFG->dirroot . '/mod/quiz/report/statistics/statistics_question_table.php');
-require_once($CFG->dirroot . '/mod/quiz/report/statistics/qstats.php');
-require_once($CFG->dirroot . '/mod/quiz/report/statistics/responseanalysis.php');
+require_once($CFG->dirroot . '/question/engine/statistics.php');
+require_once($CFG->dirroot . '/question/engine/responseanalysis.php');
 
 
 /**
@@ -361,7 +361,7 @@ class quiz_statistics_report extends quiz_default_report {
             }
         }
 
-        $responesstats = new quiz_statistics_response_analyser($question);
+        $responesstats = new question_response_analyser($question);
         $responesstats->load_cached($quizstats->id);
 
         $qtable->question_setup($reporturl, $question, $responesstats);
@@ -737,7 +737,7 @@ class quiz_statistics_report extends quiz_default_report {
             }
         }
 
-        $qstats = new quiz_statistics_question_stats($questions, $s, $summarksavg);
+        $qstats = new question_statistics($questions, $s, $summarksavg);
         $qstats->load_step_data($quizid, $currentgroup, $groupstudents, $useallattempts);
         $qstats->compute_statistics();
 
@@ -914,7 +914,7 @@ class quiz_statistics_report extends quiz_default_report {
             }
             $done[$question->id] = 1;
 
-            $responesstats = new quiz_statistics_response_analyser($question);
+            $responesstats = new question_response_analyser($question);
             $responesstats->analyse($qubaids);
             $responesstats->store_cached($quizstatisticsid);
         }
@@ -926,7 +926,7 @@ class quiz_statistics_report extends quiz_default_report {
             }
             $done[$question->id] = 1;
 
-            $responesstats = new quiz_statistics_response_analyser($question);
+            $responesstats = new question_response_analyser($question);
             $responesstats->analyse($qubaids);
             $responesstats->store_cached($quizstatisticsid);
         }
