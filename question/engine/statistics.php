@@ -39,26 +39,17 @@ class question_statistics {
     public $questions;
     public $subquestions = array();
 
-    protected $s;
     protected $summarksavg;
-    protected $allattempts;
-
-    /** @var mixed states from which to calculate stats - iteratable. */
-    protected $lateststeps;
 
     protected $sumofmarkvariance = 0;
     protected $randomselectors = array();
 
     /**
      * Constructor.
-     * @param $questions the questions.
-     * @param $s the number of attempts included in the stats.
-     * @param $summarksavg the average attempt summarks.
+     *
+     * @param $questions array the main questions indexed by slot.
      */
-    public function __construct($questions, $s, $summarksavg) {
-        $this->s = $s;
-        $this->summarksavg = $summarksavg;
-
+    public function __construct($questions) {
         foreach ($questions as $slot => $question) {
             $question->_stats = $this->make_blank_question_stats();
             $question->_stats->questionid = $question->id;
@@ -91,190 +82,186 @@ class question_statistics {
     }
 
     /**
-     * Load the data that will be needed to perform the calculations.
-     *
-     * @param int $quizid the quiz id.
-     * @param int $currentgroup the current group. 0 for none.
-     * @param array $groupstudents students in this group.
-     * @param bool $allattempts use all attempts, or just first attempts.
+     * @param $qubaids qubaid_condition
+     * @return array with three items
+     *              - $lateststeps array of latest step data for the question usages
+     *              - $summarks    array of total marks for each usage, indexed by usage id
+     *              - $summarksavg the average of the total marks over all the usages
      */
-    public function load_step_data($quizid, $currentgroup, $groupstudents, $allattempts) {
-        global $DB;
+    protected function get_latest_steps($qubaids) {
+        $dm = new question_engine_data_mapper();
 
-        $this->allattempts = $allattempts;
+        $fields = "    qas.id,
+    qa.questionusageid,
+    qa.questionid,
+    qa.slot,
+    qa.maxmark,
+    qas.fraction * qa.maxmark as mark";
 
-        list($qsql, $qparams) = $DB->get_in_or_equal(array_keys($this->questions),
-                SQL_PARAMS_NAMED, 'q');
-        list($fromqa, $whereqa, $qaparams) = quiz_statistics_attempts_sql(
-                $quizid, $currentgroup, $groupstudents, $allattempts, false);
+        $lateststeps = $dm->load_questions_usages_latest_steps($qubaids, array_keys($this->questions), $fields);
+        $summarks = array();
+        if ($lateststeps) {
+            foreach ($lateststeps as $step) {
+                if (!isset($summarks[$step->questionusageid])) {
+                    $summarks[$step->questionusageid] = 0;
+                }
+                $summarks[$step->questionusageid] += $step->mark;
+            }
+            $summarksavg = array_sum($summarks) / count($summarks);
+        } else {
+            $summarksavg = null;
+        }
 
-        $this->lateststeps = $DB->get_records_sql("
-                SELECT
-                    qas.id,
-                    quiza.sumgrades,
-                    qa.questionid,
-                    qa.slot,
-                    qa.maxmark,
-                    qas.fraction * qa.maxmark as mark
-
-                FROM $fromqa
-                JOIN {question_attempts} qa ON qa.questionusageid = quiza.uniqueid
-                JOIN (
-                    SELECT questionattemptid, MAX(id) AS latestid
-                      FROM {question_attempt_steps}
-                  GROUP BY questionattemptid
-                ) lateststepid ON lateststepid.questionattemptid = qa.id
-                JOIN {question_attempt_steps} qas ON qas.id = lateststepid.latestid
-
-                WHERE
-                    qa.slot $qsql AND
-                    $whereqa", $qparams + $qaparams);
+        return array($lateststeps, $summarks, $summarksavg);
     }
 
-    public function compute_statistics() {
+    /**
+     * @param $qubaids qubaid_condition
+     */
+    public function calculate($qubaids) {
         set_time_limit(0);
 
-        $subquestionstats = array();
+        list($lateststeps, $summarks, $summarksavg) = $this->get_latest_steps($qubaids);
 
-        // Compute the statistics of position, and for random questions, work
-        // out which questions appear in which positions.
-        foreach ($this->lateststeps as $step) {
-            $this->initial_steps_walker($step, $this->questions[$step->slot]->_stats);
+        if ($lateststeps) {
+            $subquestionstats = array();
 
-            // If this is a random question what is the real item being used?
-            if ($step->questionid != $this->questions[$step->slot]->id) {
-                if (!isset($subquestionstats[$step->questionid])) {
-                    $subquestionstats[$step->questionid] = $this->make_blank_question_stats();
-                    $subquestionstats[$step->questionid]->questionid = $step->questionid;
-                    $subquestionstats[$step->questionid]->allattempts = $this->allattempts;
-                    $subquestionstats[$step->questionid]->usedin = array();
-                    $subquestionstats[$step->questionid]->subquestion = true;
-                    $subquestionstats[$step->questionid]->differentweights = false;
-                    $subquestionstats[$step->questionid]->maxmark = $step->maxmark;
-                } else if ($subquestionstats[$step->questionid]->maxmark != $step->maxmark) {
-                    $subquestionstats[$step->questionid]->differentweights = true;
-                }
+            // Compute the statistics of position, and for random questions, work
+            // out which questions appear in which positions.
+            foreach ($lateststeps as $step) {
+                $this->initial_steps_walker($step, $this->questions[$step->slot]->_stats, $summarks);
 
-                $this->initial_steps_walker($step,
-                        $subquestionstats[$step->questionid], false);
+                // If this is a random question what is the real item being used?
+                if ($step->questionid != $this->questions[$step->slot]->id) {
+                    if (!isset($subquestionstats[$step->questionid])) {
+                        $subquestionstats[$step->questionid] = $this->make_blank_question_stats();
+                        $subquestionstats[$step->questionid]->questionid = $step->questionid;
+                        $subquestionstats[$step->questionid]->usedin = array();
+                        $subquestionstats[$step->questionid]->subquestion = true;
+                        $subquestionstats[$step->questionid]->differentweights = false;
+                        $subquestionstats[$step->questionid]->maxmark = $step->maxmark;
+                    } else if ($subquestionstats[$step->questionid]->maxmark != $step->maxmark) {
+                        $subquestionstats[$step->questionid]->differentweights = true;
+                    }
 
-                $number = $this->questions[$step->slot]->number;
-                $subquestionstats[$step->questionid]->usedin[$number] = $number;
+                    $this->initial_steps_walker($step, $subquestionstats[$step->questionid], $summarks, false);
 
-                $randomselectorstring = $this->questions[$step->slot]->category .
+                    $number = $this->questions[$step->slot]->number;
+                    $subquestionstats[$step->questionid]->usedin[$number] = $number;
+
+                    $randomselectorstring = $this->questions[$step->slot]->category .
                         '/' . $this->questions[$step->slot]->questiontext;
-                if (!isset($this->randomselectors[$randomselectorstring])) {
-                    $this->randomselectors[$randomselectorstring] = array();
-                }
-                $this->randomselectors[$randomselectorstring][$step->questionid] =
+                    if (!isset($this->randomselectors[$randomselectorstring])) {
+                        $this->randomselectors[$randomselectorstring] = array();
+                    }
+                    $this->randomselectors[$randomselectorstring][$step->questionid] =
                         $step->questionid;
+                }
             }
-        }
 
-        foreach ($this->randomselectors as $key => $notused) {
-            ksort($this->randomselectors[$key]);
-        }
+            foreach ($this->randomselectors as $key => $notused) {
+                ksort($this->randomselectors[$key]);
+            }
 
-        // Compute the statistics of question id, if we need any.
-        $this->subquestions = question_load_questions(array_keys($subquestionstats));
-        foreach ($this->subquestions as $qid => $subquestion) {
-            $subquestion->_stats = $subquestionstats[$qid];
-            $subquestion->maxmark = $subquestion->_stats->maxmark;
-            $subquestion->_stats->randomguessscore = $this->get_random_guess_score($subquestion);
+            // Compute the statistics of question id, if we need any.
+            $this->subquestions = question_load_questions(array_keys($subquestionstats));
+            foreach ($this->subquestions as $qid => $subquestion) {
+                $subquestion->_stats = $subquestionstats[$qid];
+                $subquestion->maxmark = $subquestion->_stats->maxmark;
+                $subquestion->_stats->randomguessscore = $this->get_random_guess_score($subquestion);
 
-            $this->initial_question_walker($subquestion->_stats);
+                $this->initial_question_walker($subquestion->_stats);
 
-            if ($subquestionstats[$qid]->differentweights) {
-                // TODO output here really sucks, but throwing is too severe.
-                global $OUTPUT;
-                echo $OUTPUT->notification(
+                if ($subquestionstats[$qid]->differentweights) {
+                    // TODO output here really sucks, but throwing is too severe.
+                    global $OUTPUT;
+                    echo $OUTPUT->notification(
                         get_string('erroritemappearsmorethanoncewithdifferentweight',
-                        'quiz_statistics', $this->subquestions[$qid]->name));
+                                   'quiz_statistics', $this->subquestions[$qid]->name));
+                }
+
+                if ($subquestion->_stats->usedin) {
+                    sort($subquestion->_stats->usedin, SORT_NUMERIC);
+                    $subquestion->_stats->positions = implode(',', $subquestion->_stats->usedin);
+                } else {
+                    $subquestion->_stats->positions = '';
+                }
             }
 
-            if ($subquestion->_stats->usedin) {
-                sort($subquestion->_stats->usedin, SORT_NUMERIC);
-                $subquestion->_stats->positions = implode(',', $subquestion->_stats->usedin);
-            } else {
-                $subquestion->_stats->positions = '';
-            }
-        }
+            // Finish computing the averages, and put the subquestion data into the
+            // corresponding questions.
 
-        // Finish computing the averages, and put the subquestion data into the
-        // corresponding questions.
+            // This cannot be a foreach loop because we need to have both
+            // $question and $nextquestion available, but apart from that it is
+            // foreach ($this->questions as $qid => $question).
+            reset($this->questions);
+            while (list($slot, $question) = each($this->questions)) {
+                $nextquestion = current($this->questions);
+                $question->_stats->positions = $question->number;
+                $question->_stats->maxmark = $question->maxmark;
+                $question->_stats->randomguessscore = $this->get_random_guess_score($question);
 
-        // This cannot be a foreach loop because we need to have both
-        // $question and $nextquestion available, but apart from that it is
-        // foreach ($this->questions as $qid => $question).
-        reset($this->questions);
-        while (list($slot, $question) = each($this->questions)) {
-            $nextquestion = current($this->questions);
-            $question->_stats->allattempts = $this->allattempts;
-            $question->_stats->positions = $question->number;
-            $question->_stats->maxmark = $question->maxmark;
-            $question->_stats->randomguessscore = $this->get_random_guess_score($question);
+                $this->initial_question_walker($question->_stats);
 
-            $this->initial_question_walker($question->_stats);
-
-            if ($question->qtype == 'random') {
-                $randomselectorstring = $question->category.'/'.$question->questiontext;
-                if ($nextquestion && $nextquestion->qtype == 'random') {
-                    $nextrandomselectorstring = $nextquestion->category . '/' .
+                if ($question->qtype == 'random') {
+                    $randomselectorstring = $question->category.'/'.$question->questiontext;
+                    if ($nextquestion && $nextquestion->qtype == 'random') {
+                        $nextrandomselectorstring = $nextquestion->category . '/' .
                             $nextquestion->questiontext;
-                    if ($randomselectorstring == $nextrandomselectorstring) {
-                        continue; // Next loop iteration.
+                        if ($randomselectorstring == $nextrandomselectorstring) {
+                            continue; // Next loop iteration.
+                        }
+                    }
+                    if (isset($this->randomselectors[$randomselectorstring])) {
+                        $question->_stats->subquestions = implode(',',
+                                                                  $this->randomselectors[$randomselectorstring]);
                     }
                 }
-                if (isset($this->randomselectors[$randomselectorstring])) {
-                    $question->_stats->subquestions = implode(',',
-                            $this->randomselectors[$randomselectorstring]);
+            }
+
+            // Go through the records one more time.
+            foreach ($lateststeps as $step) {
+                $this->secondary_steps_walker($step, $this->questions[$step->slot]->_stats, $summarks, $summarksavg);
+
+                if ($this->questions[$step->slot]->qtype == 'random') {
+                    $this->secondary_steps_walker($step, $this->subquestions[$step->questionid]->_stats, $summarks, $summarksavg);
                 }
             }
-        }
 
-        // Go through the records one more time.
-        foreach ($this->lateststeps as $step) {
-            $this->secondary_steps_walker($step,
-                    $this->questions[$step->slot]->_stats);
+            $sumofcovariancewithoverallmark = 0;
+            foreach ($this->questions as $slot => $question) {
+                $this->secondary_question_walker($question->_stats);
 
-            if ($this->questions[$step->slot]->qtype == 'random') {
-                $this->secondary_steps_walker($step,
-                        $this->subquestions[$step->questionid]->_stats);
-            }
-        }
+                $this->sumofmarkvariance += $question->_stats->markvariance;
 
-        $sumofcovariancewithoverallmark = 0;
-        foreach ($this->questions as $slot => $question) {
-            $this->secondary_question_walker($question->_stats);
-
-            $this->sumofmarkvariance += $question->_stats->markvariance;
-
-            if ($question->_stats->covariancewithoverallmark >= 0) {
-                $sumofcovariancewithoverallmark +=
+                if ($question->_stats->covariancewithoverallmark >= 0) {
+                    $sumofcovariancewithoverallmark +=
                         sqrt($question->_stats->covariancewithoverallmark);
-                $question->_stats->negcovar = 0;
-            } else {
-                $question->_stats->negcovar = 1;
-            }
-        }
-
-        foreach ($this->subquestions as $subquestion) {
-            $this->secondary_question_walker($subquestion->_stats);
-        }
-
-        foreach ($this->questions as $question) {
-            if ($sumofcovariancewithoverallmark) {
-                if ($question->_stats->negcovar) {
-                    $question->_stats->effectiveweight = null;
+                    $question->_stats->negcovar = 0;
                 } else {
-                    $question->_stats->effectiveweight = 100 *
+                    $question->_stats->negcovar = 1;
+                }
+            }
+
+            foreach ($this->subquestions as $subquestion) {
+                $this->secondary_question_walker($subquestion->_stats);
+            }
+
+            foreach ($this->questions as $question) {
+                if ($sumofcovariancewithoverallmark) {
+                    if ($question->_stats->negcovar) {
+                        $question->_stats->effectiveweight = null;
+                    } else {
+                        $question->_stats->effectiveweight = 100 *
                             sqrt($question->_stats->covariancewithoverallmark) /
                             $sumofcovariancewithoverallmark;
+                    }
+                } else {
+                    $question->_stats->effectiveweight = null;
                 }
-            } else {
-                $question->_stats->effectiveweight = null;
             }
         }
+
     }
 
     /**
@@ -283,20 +270,21 @@ class question_statistics {
      *
      * @param object $step the state to add to the statistics.
      * @param object $stats the question statistics we are accumulating.
+     * @param array  $summarks of the sum of marks for each question usage, indexed by question usage id
      * @param bool $positionstat whether this is a statistic of position of question.
      */
-    protected function initial_steps_walker($step, $stats, $positionstat = true) {
+    protected function initial_steps_walker($step, $stats, $summarks, $positionstat = true) {
         $stats->s++;
         $stats->totalmarks += $step->mark;
         $stats->markarray[] = $step->mark;
 
         if ($positionstat) {
-            $stats->totalothermarks += $step->sumgrades - $step->mark;
-            $stats->othermarksarray[] = $step->sumgrades - $step->mark;
+            $stats->totalothermarks += $summarks[$step->questionusageid] - $step->mark;
+            $stats->othermarksarray[] = $summarks[$step->questionusageid] - $step->mark;
 
         } else {
-            $stats->totalothermarks += $step->sumgrades;
-            $stats->othermarksarray[] = $step->sumgrades;
+            $stats->totalothermarks += $summarks[$step->questionusageid];
+            $stats->othermarksarray[] = $summarks[$step->questionusageid];
         }
     }
 
@@ -325,19 +313,20 @@ class question_statistics {
      * Now we know the averages, accumulate the date needed to compute the higher
      * moments of the question scores.
      *
-     * @param object $step the state to add to the statistics.
-     * @param object $stats the question statistics we are accumulating.
-     * @param bool $positionstat whether this is a statistic of position of question.
+     * @param object $step     the state to add to the statistics.
+     * @param object $stats    the question statistics we are accumulating.
+     * @param array  $summarks of the sum of marks for each question usage, indexed by question usage id
+     * @param float  $summarksavg the average sum of marks for all question usages
      */
-    protected function secondary_steps_walker($step, $stats) {
+    protected function secondary_steps_walker($step, $stats, $summarks, $summarksavg) {
         $markdifference = $step->mark - $stats->markaverage;
         if ($stats->subquestion) {
-            $othermarkdifference = $step->sumgrades - $stats->othermarkaverage;
+            $othermarkdifference = $summarks[$step->questionusageid] - $stats->othermarkaverage;
         } else {
-            $othermarkdifference = $step->sumgrades - $step->mark -
+            $othermarkdifference = $summarks[$step->questionusageid] - $step->mark -
                     $stats->othermarkaverage;
         }
-        $overallmarkdifference = $step->sumgrades - $this->summarksavg;
+        $overallmarkdifference = $summarks[$step->questionusageid] - $summarksavg;
 
         $sortedmarkdifference = array_shift($stats->markarray) - $stats->markaverage;
         $sortedothermarkdifference = array_shift($stats->othermarksarray) -
@@ -405,4 +394,29 @@ class question_statistics {
     public function get_sum_of_mark_variance() {
         return $this->sumofmarkvariance;
     }
+
+    public function get_cached($quizstatsid) {
+        global $DB;
+        $questionstats = $DB->get_records('question_statistics',
+                                          array('quizstatisticsid' => $quizstatsid));
+
+        $subquestionstats = array();
+        foreach ($questionstats as $stat) {
+            if ($stat->slot) {
+                $this->questions[$stat->slot]->_stats = $stat;
+            } else {
+                $subquestionstats[$stat->questionid] = $stat;
+            }
+        }
+
+        if (!empty($subquestionstats)) {
+            $subqstofetch = array_keys($subquestionstats);
+            $this->subquestions = question_load_questions($subqstofetch);
+            foreach ($this->subquestions as $subqid => $subq) {
+                $this->subquestions[$subqid]->_stats = $subquestionstats[$subqid];
+                $this->subquestions[$subqid]->maxmark = $subq->defaultmark;
+            }
+        }
+    }
+
 }

@@ -40,7 +40,6 @@ defined('MOODLE_INTERNAL') || die();
 class question_response_analyser {
     /** @var object the data from the database that defines the question. */
     protected $questiondata;
-    protected $loaded = false;
 
     /**
      * @var array This is a multi-dimensional array that stores the results of
@@ -122,9 +121,9 @@ class question_response_analyser {
     /**
      * Analyse all the response data for for all the specified attempts at
      * this question.
-     * @param $qubaids which attempts to consider.
+     * @param qubaid_condition $qubaids which attempts to consider.
      */
-    public function analyse($qubaids) {
+    public function calculate($qubaids) {
         // Load data.
         $dm = new question_engine_data_mapper();
         $questionattempts = $dm->load_attempts_at_question($this->questiondata->id, $qubaids);
@@ -133,8 +132,6 @@ class question_response_analyser {
         foreach ($questionattempts as $qa) {
             $this->add_data_from_one_attempt($qa);
         }
-
-        $this->loaded = true;
     }
 
     /**
@@ -187,7 +184,6 @@ class question_response_analyser {
             $this->responses[$row->subqid][$row->aid][$row->response]->count = $row->rcount;
             $this->responses[$row->subqid][$row->aid][$row->response]->fraction = $row->credit;
         }
-        $this->loaded = true;
         return true;
     }
 
@@ -198,11 +194,6 @@ class question_response_analyser {
      */
     public function store_cached($quizstatisticsid) {
         global $DB;
-
-        if (!$this->loaded) {
-            throw new coding_exception(
-                    'Question responses have not been analyised. Cannot store in the database.');
-        }
 
         foreach ($this->responses as $subpartid => $partdata) {
             foreach ($partdata as $responseclassid => $classdata) {

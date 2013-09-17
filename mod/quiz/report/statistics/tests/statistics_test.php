@@ -47,8 +47,32 @@ class testable_quiz_statistics_question_stats extends question_statistics {
     protected function get_random_guess_score($questiondata) {
         return 0;
     }
-}
 
+    /**
+     * @param $qubaids qubaid_condition is ignored in this test
+     * @return array with three items
+     *              - $lateststeps array of latest step data for the question usages
+     *              - $summarks    array of total marks for each usage, indexed by usage id
+     *              - $summarksavg the average of the total marks over all the usages     */
+    protected function get_latest_steps($qubaids) {
+        $summarks = array();
+        $fakeusageid = 0;
+        foreach ($this->lateststeps as $step) {
+            // The same 'sumgrades' field is available in step data for every slot, we will ignore all slots but slot 1.
+            // The step for slot 1 is always the first one in the csv file for each usage, we will use that to separate steps from
+            // each usage.
+            if ($step->slot == 1) {
+                $fakeusageid++;
+                $summarks[$fakeusageid] = $step->sumgrades;
+            }
+            unset($step->sumgrades);
+            $step->questionusageid = $fakeusageid;
+        }
+
+        $summarksavg = array_sum($summarks) / count($summarks);
+        return array($this->lateststeps, $summarks, $summarksavg);
+    }
+}
 
 /**
  * Unit tests for (some of) question_statistics.
@@ -70,7 +94,7 @@ class quiz_statistics_question_stats_testcase extends basic_testcase {
         $questions = $this->get_records_from_csv(__DIR__.'/fixtures/mdl_question.csv');
         $this->qstats = new testable_quiz_statistics_question_stats($questions, 22, 10045.45455);
         $this->qstats->set_step_data($steps);
-        $this->qstats->compute_statistics();
+        $this->qstats->calculate(null);
 
         // Values expected are taken from contrib/tools/quiz_tools/stats.xls.
         $facility = array(0, 0, 0, 0, null, null, null, 41.19318182, 81.36363636,

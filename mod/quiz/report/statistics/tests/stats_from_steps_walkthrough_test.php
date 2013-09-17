@@ -17,7 +17,7 @@
 /**
  * Quiz attempt walk through using data from csv file.
  *
- * @package    mod_quiz
+ * @package    quiz_statistics
  * @category   phpunit
  * @copyright  2013 The Open University
  * @author     Jamie Pratt <me@jamiep.org>
@@ -52,7 +52,7 @@ class testable_quiz_statistics_report extends quiz_statistics_report {
 /**
  * Quiz attempt walk through using data from csv file.
  *
- * @package    mod_quiz
+ * @package    quiz_statistics
  * @category   phpunit
  * @copyright  2013 The Open University
  * @author     Jamie Pratt <me@jamiep.org>
