@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/quiz/report/statistics/db" VERSION="20120122" COMMENT="XMLDB file for Moodle mod/quiz/report/statistics"
+<XMLDB PATH="mod/quiz/report/statistics/db" VERSION="20130917" COMMENT="XMLDB file for Moodle mod/quiz/report/statistics"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../../../lib/xmldb/xmldb.xsd"
 >
@@ -7,9 +7,7 @@
     <TABLE NAME="quiz_statistics" COMMENT="table to cache results from analysis done in statistics report for quizzes.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="quizid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
-        <FIELD NAME="groupid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
-        <FIELD NAME="allattempts" TYPE="int" LENGTH="4" NOTNULL="true" SEQUENCE="false" COMMENT="bool used to indicate whether these stats are for all attempts or just for the first."/>
+        <FIELD NAME="hashcode" TYPE="char" LENGTH="40" NOTNULL="true" SEQUENCE="false" COMMENT="sha1 hash of serialized qubaids_condition class. Unique for every combination of class name and property."/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="firstattemptscount" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="allattemptscount" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>

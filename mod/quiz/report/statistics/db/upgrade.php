@@ -64,6 +64,31 @@ function xmldb_quiz_statistics_upgrade($oldversion) {
             $dbman->drop_table($table);
         }
 
+        $table = new xmldb_table('quiz_statistics');
+        $field = new xmldb_field('quizid');
+
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+
+        $field = new xmldb_field('groupid');
+
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+
+        $field = new xmldb_field('allattempts');
+
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+
+        $field = new xmldb_field('hashcode', XMLDB_TYPE_CHAR, '40', null, XMLDB_NOTNULL, null, null, 'id');
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
         // Main savepoint reached.
         upgrade_plugin_savepoint(true, 2013090900, 'quiz', 'statistics');
     }

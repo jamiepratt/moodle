@@ -2363,14 +2363,15 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2013082700.00);
     }
 
-    if ($oldversion < 2013090500.01) {
+    if ($oldversion < 2013090500.02) {
 
         // Define table question_statistics to be created.
         $table = new xmldb_table('question_statistics');
 
         // Adding fields to table question_statistics.
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-        $table->add_field('quizstatisticsid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('hashcode', XMLDB_TYPE_CHAR, '40', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('questionid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('slot', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
         $table->add_field('subquestion', XMLDB_TYPE_INTEGER, '4', null, XMLDB_NOTNULL, null, null);
@@ -2399,7 +2400,8 @@ function xmldb_main_upgrade($oldversion) {
 
         // Adding fields to table question_response_analysis.
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-        $table->add_field('quizstatisticsid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('hashcode', XMLDB_TYPE_CHAR, '40', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('questionid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('subqid', XMLDB_TYPE_CHAR, '100', null, XMLDB_NOTNULL, null, null);
         $table->add_field('aid', XMLDB_TYPE_CHAR, '100', null, null, null, null);
@@ -2416,7 +2418,7 @@ function xmldb_main_upgrade($oldversion) {
         }
 
         // Main savepoint reached.
-        upgrade_main_savepoint(true, 2013090500.01);
+        upgrade_main_savepoint(true, 2013090500.02);
     }
 
     return true;

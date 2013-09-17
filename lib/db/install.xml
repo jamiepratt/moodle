@@ -1486,7 +1486,8 @@
       <TABLE NAME="question_statistics" COMMENT="Statistics for individual questions used in an activity.">
           <FIELDS>
               <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-              <FIELD NAME="quizstatisticsid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+              <FIELD NAME="hashcode" TYPE="char" LENGTH="40" NOTNULL="true" SEQUENCE="false" COMMENT="sha1 hash of serialized qubaids_condition class. Unique for every combination of class name and property."/>
+              <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
               <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
               <FIELD NAME="slot" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="The position in the quiz where this question appears"/>
               <FIELD NAME="subquestion" TYPE="int" LENGTH="4" NOTNULL="true" SEQUENCE="false"/>
@@ -1509,7 +1510,8 @@
       <TABLE NAME="question_response_analysis" COMMENT="Analysis of student responses given to questions.">
           <FIELDS>
               <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-              <FIELD NAME="quizstatisticsid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+              <FIELD NAME="hashcode" TYPE="char" LENGTH="40" NOTNULL="true" SEQUENCE="false" COMMENT="sha1 hash of serialized qubaids_condition class. Unique for every combination of class name and property."/>
+              <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
               <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
               <FIELD NAME="subqid" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
               <FIELD NAME="aid" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
