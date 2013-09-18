@@ -35,25 +35,13 @@ function question_usage_statistics_cron() {
     global $DB;
 
     $expiretime = time() - 5*HOURSECS;
-    $todelete = $DB->get_records_select_menu('quiz_statistics',
-                                             'timemodified < ?', array($expiretime), '', 'id, 1');
-
-    if (!$todelete) {
-        return true;
-    }
 
     mtrace("\n  Cleaning up old question statistics cache records...", '');
 
-    list($todeletesql, $todeleteparams) = $DB->get_in_or_equal(array_keys($todelete));
+    $DB->delete_records_select('quiz_statistics', 'timemodified < ?', array($expiretime));
+    $DB->delete_records_select('question_statistics', 'timemodified < ?', array($expiretime));
+    $DB->delete_records_select('question_response_analysis', 'timemodified < ?', array($expiretime));
 
-    $DB->delete_records_select('question_statistics',
-                               'quizstatsid ' . $todeletesql, $todeleteparams);
-
-    $DB->delete_records_select('question_response_analysis',
-                               'quizstatsid ' . $todeletesql, $todeleteparams);
-
-    $DB->delete_records_select('quiz_statistics',
-                               'id ' . $todeletesql, $todeleteparams);
     mtrace('done.');
     return true;
 }

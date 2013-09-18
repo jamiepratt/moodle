@@ -260,6 +260,28 @@ class question_statistics {
                     $question->_stats->effectiveweight = null;
                 }
             }
+            $this->cache_stats($qubaids);
+        }
+
+
+    }
+
+    /**
+     * @param $qubaids qubaid_condition
+     */
+    protected function cache_stats($qubaids) {
+        global $DB;
+        $cachetime = time();
+        foreach ($this->questions as $question) {
+            $question->_stats->hashcode = $qubaids->get_hash_code();
+            $question->_stats->timemodified = $cachetime;
+            $DB->insert_record('question_statistics', $question->_stats, false);
+        }
+
+        foreach ($this->subquestions as $subquestion) {
+            $subquestion->_stats->hashcode = $qubaids->get_hash_code();
+            $subquestion->_stats->timemodified = $cachetime;
+            $DB->insert_record('question_statistics', $subquestion->_stats, false);
         }
 
     }
@@ -395,10 +417,13 @@ class question_statistics {
         return $this->sumofmarkvariance;
     }
 
-    public function get_cached($quizstatsid) {
+    /**
+     * @param qubaid_condition $qubaids
+     */
+    public function get_cached($qubaids) {
         global $DB;
         $questionstats = $DB->get_records('question_statistics',
-                                          array('quizstatisticsid' => $quizstatsid));
+                                          array('hashcode' => $qubaids->get_hash_code()));
 
         $subquestionstats = array();
         foreach ($questionstats as $stat) {

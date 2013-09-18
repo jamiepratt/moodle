@@ -132,6 +132,8 @@ class question_response_analyser {
         foreach ($questionattempts as $qa) {
             $this->add_data_from_one_attempt($qa);
         }
+        $this->store_cached($qubaids);
+
     }
 
     /**
@@ -165,16 +167,15 @@ class question_response_analyser {
 
     /**
      * Store the computed response analysis in the question_response_analysis table.
-     * @param int $quizstatisticsid the cached quiz statistics to load the
+     * @param qubaid_condition $qubaids
      * data corresponding to.
      * @return bool true if cached data was found in the database and loaded, otherwise false, to mean no data was loaded.
      */
-    public function load_cached($quizstatisticsid) {
+    public function load_cached($qubaids) {
         global $DB;
 
         $rows = $DB->get_records('question_response_analysis',
-                array('quizstatisticsid' => $quizstatisticsid,
-                        'questionid' => $this->questiondata->id));
+                array('hashcode' => $qubaids->get_hash_code(), 'questionid' => $this->questiondata->id));
         if (!$rows) {
             return false;
         }
@@ -189,17 +190,17 @@ class question_response_analyser {
 
     /**
      * Store the computed response analysis in the question_response_analysis table.
-     * @param int $quizstatisticsid the cached quiz statistics this corresponds to.
-     * @throws coding_exception
+     * @param qubaid_condition $qubaids
      */
-    public function store_cached($quizstatisticsid) {
+    public function store_cached($qubaids) {
         global $DB;
 
+        $cachetime = time();
         foreach ($this->responses as $subpartid => $partdata) {
             foreach ($partdata as $responseclassid => $classdata) {
                 foreach ($classdata as $response => $data) {
                     $row = new stdClass();
-                    $row->quizstatisticsid = $quizstatisticsid;
+                    $row->hashcode = $qubaids->get_hash_code();
                     $row->questionid = $this->questiondata->id;
                     $row->subqid = $subpartid;
                     if ($responseclassid === '') {
@@ -210,6 +211,7 @@ class question_response_analyser {
                     $row->response = $response;
                     $row->rcount = $data->count;
                     $row->credit = $data->fraction;
+                    $row->timemodified = $cachetime;
                     $DB->insert_record('question_response_analysis', $row, false);
                 }
             }

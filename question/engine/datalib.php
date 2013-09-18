@@ -1464,6 +1464,14 @@ abstract class qubaid_condition {
      * @return the params needed by a query that uses {@link usage_id_in()}.
      */
     public abstract function usage_id_in_params();
+
+    /**
+     * @return string 40-character hash code that uniquely identifies the combination of properties and class name of this qubaid
+     *                  condition.
+     */
+    public function get_hash_code() {
+        return sha1(serialize($this));
+    }
 }
 
 
