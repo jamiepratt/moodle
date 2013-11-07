@@ -3153,6 +3153,15 @@ EOT;
         $this->lastupdate = 0;
         $this->time_start = 0;
     }
+
+    /**
+     * Has initialisation been done yet?
+     *
+     * @return bool
+     */
+    public function is_created() {
+        return !empty($this->time_start);
+    }
 }
 
 /**
@@ -3324,6 +3333,55 @@ class error_log_progress_trace extends progress_trace {
     }
 }
 
+interface progress_trace_displays_percent_done {
+    /**
+     * We expect one messages per task, and we estimate time and percent remaining from the number of tasks done and remaining.
+     *
+     * @param int $totaltasks
+     */
+    public function set_total_tasks($totaltasks);
+}
+
+/**
+ * A wrapper for {@link progress_bar} which displays progress using an html progress bar.
+ */
+class progress_bar_progress_trace
+                extends progress_trace
+                implements progress_trace_displays_percent_done {
+
+    /**
+     * @var integer
+     */
+    protected $totaltasks;
+
+    /**
+     * @var integer
+     */
+    protected $currentmessageno = 0;
+
+    /**
+     * @var progress_bar
+     */
+    protected $progressbar;
+
+    public function __construct() {
+        $this->progressbar = new progress_bar();
+    }
+
+    public function set_total_tasks($totaltasks) {
+        $this->totaltasks = $totaltasks;
+    }
+
+
+    public function output($message, $depth = 0) {
+        if (!$this->progressbar->is_created()) {
+            $this->progressbar->create();
+        }
+        $this->currentmessageno++;
+        $this->progressbar->update($this->currentmessageno, $this->totaltasks, $message);
+    }
+
+}
 /**
  * Special type of trace that can be used for catching of output of other traces.
  *

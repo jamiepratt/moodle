@@ -54,12 +54,25 @@ class calculator {
     protected $randomselectors = array();
 
     /**
+     * @var \progress_trace
+     */
+    protected $progresstrace;
+
+    /**
      * Constructor.
      *
      * @param object[] questions to analyze, keyed by slot, also analyses sub questions for random questions.
      *                              we expect some extra fields - slot, maxmark and number on the full question data objects.
+     * @param \progress_trace|null $progresstrace the element to send progress messages to,
+     *                                              default is {@link \null_progress_trace}.
      */
-    public function __construct($questions) {
+    public function __construct($questions, $progresstrace = null) {
+
+        if ($progresstrace === null) {
+            $progresstrace = new \null_progress_trace();
+        }
+        $this->progresstrace = $progresstrace;
+
         foreach ($questions as $slot => $question) {
             $this->questionstats[$slot] = new calculated();
             $this->questionstats[$slot]->questionid = $question->id;
@@ -78,10 +91,14 @@ class calculator {
     public function calculate($qubaids) {
         set_time_limit(0);
 
+        if ($this->progresstrace instanceof \progress_trace_displays_percent_done) {
+            $this->progresstrace->set_total_tasks(5);
+        }
+
         list($lateststeps, $summarks, $summarksavg) = $this->get_latest_steps($qubaids);
 
         if ($lateststeps) {
-
+            $this->progresstrace->output(get_string('calculatingqstatsfirstloopthroughsteps', 'quiz_statistics'));
             // Compute the statistics of position, and for random questions, work
             // out which questions appear in which positions.
             foreach ($lateststeps as $step) {
@@ -117,6 +134,7 @@ class calculator {
 
             // Compute the statistics of question id, if we need any.
             $subquestions = question_load_questions(array_keys($this->subquestionstats));
+            $this->progresstrace->output(get_string('calculatingqstatsforsubquestions', 'quiz_statistics'));
             foreach ($subquestions as $qid => $subquestion) {
                 $this->subquestionstats[$qid]->question = $subquestion;
                 $this->subquestionstats[$qid]->question->maxmark = $this->subquestionstats[$qid]->maxmark;
@@ -147,6 +165,7 @@ class calculator {
             // $question and $nextquestion available, but apart from that it is
             // foreach ($this->questions as $qid => $question).
             reset($this->questionstats);
+            $this->progresstrace->output(get_string('calculatingqstatsfirstiterationthroughquestions', 'quiz_statistics'));
             while (list($slot, $questionstat) = each($this->questionstats)) {
                 $nextquestionstats = current($this->questionstats);
 
@@ -168,6 +187,7 @@ class calculator {
             }
 
             // Go through the records one more time.
+            $this->progresstrace->output(get_string('calculatingqstatsseconditerationthroughsteps', 'quiz_statistics'));
             foreach ($lateststeps as $step) {
                 $this->secondary_steps_walker($step, $this->questionstats[$step->slot], $summarks, $summarksavg);
 
@@ -187,6 +207,7 @@ class calculator {
                 }
             }
 
+            $this->progresstrace->output(get_string('calculatingqstatsseconditerationthroughquestions', 'quiz_statistics'));
             foreach ($this->subquestionstats as $subquestionstat) {
                 $this->secondary_question_walker($subquestionstat);
             }

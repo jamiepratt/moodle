@@ -29,6 +29,11 @@
 class quiz_statistics_calculator {
 
     /**
+     * @var \progress_trace
+     */
+    protected $progresstrace;
+
+    /**
      * Compute the quiz statistics.
      *
      * @param int   $quizid            the quiz id.
@@ -42,9 +47,6 @@ class quiz_statistics_calculator {
      * @return quiz_statistics_calculated $quizstats The statistics for overall attempt scores.
      */
     public function calculate($quizid, $whichattempts, $groupstudents, $p, $sumofmarkvariance) {
-
-
-
         $quizstats = new quiz_statistics_calculated($whichattempts);
 
         $countsandaverages = $this->attempt_counts_and_averages($quizid, $groupstudents);

@@ -44,7 +44,7 @@ class testable_quiz_statistics_report extends quiz_statistics_report {
         $qubaids = quiz_statistics_qubaids_condition($quiz->id, $groupstudents, $whichattempts);
         $this->clear_cached_data($qubaids);
         $questions = $this->load_and_initialise_questions_for_calculations($quiz);
-        return $this->get_quiz_and_questions_stats($quiz, $whichattempts, $groupstudents, $questions);
+        return $this->do_all_calculations_and_analysis($quiz, $whichattempts, $groupstudents, $questions);
     }
 }
 
