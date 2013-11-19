@@ -40,11 +40,15 @@ require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
  */
 class testable_quiz_statistics_report extends quiz_statistics_report {
 
+    public function __construct() {
+        $this->table = new quiz_statistics_table();
+    }
+
     public function get_stats($quiz, $whichattempts = QUIZ_GRADEAVERAGE, $groupstudents = array()) {
         $qubaids = quiz_statistics_qubaids_condition($quiz->id, $groupstudents, $whichattempts);
         $this->clear_cached_data($qubaids);
         $questions = $this->load_and_initialise_questions_for_calculations($quiz);
-        return $this->get_quiz_and_questions_stats($quiz, $whichattempts, $groupstudents, $questions);
+        return $this->get_all_stats_and_analysis($quiz, $whichattempts, $groupstudents, $questions);
     }
 }
 
@@ -57,7 +61,7 @@ class testable_quiz_statistics_report extends quiz_statistics_report {
  * @author     Jamie Pratt <me@jamiep.org>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class quiz_report_statistics_from_steps extends mod_quiz_attempt_walkthrough_from_csv_testcase {
+class quiz_report_statistics_from_steps_testcase extends mod_quiz_attempt_walkthrough_from_csv_testcase {
 
     /**
      * @var quiz_statistics_report object to do stats calculations.
@@ -137,5 +141,7 @@ class quiz_report_statistics_from_steps extends mod_quiz_attempt_walkthrough_fro
                 }
             }
         }
+        // Clear the time limit, otherwise phpunit complains.
+        set_time_limit(0);
     }
 }

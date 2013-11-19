@@ -125,6 +125,9 @@ class quiz_statistics_question_stats_testcase extends basic_testcase {
             -17.5074184, -10.27568922, 10.86956522, 34.58997279, 17.4790556,
             20.14359793, 22.06477733, -10);
         $this->qstats_q_fields('discriminativeefficiency', $discriminativeefficiency);
+
+        // Clear the time limit, otherwise phpunit complains.
+        set_time_limit(0);
     }
 
     public function qstats_q_fields($fieldname, $values, $multiplier=1) {
