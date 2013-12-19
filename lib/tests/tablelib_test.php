@@ -57,10 +57,11 @@ class core_tablelib_testcase extends basic_testcase {
         $data = array();
 
         foreach (range(0, $rows - 1) as $i) {
-            $row = array();
+            $row = new stdClass();
             foreach (range(0, $cols - 1) as $j) {
                 $val =  'row ' . $i . ' col ' . $j;
-                $row['column' . $j] = $val;
+                $colname = 'column' . $j;
+                $row->{$colname} = $val;
             }
             array_push($data, $row);
         }
@@ -87,10 +88,7 @@ class core_tablelib_testcase extends basic_testcase {
 
         $table->setup();
         $table->pagesize($pagesize, count($data));
-        foreach ($data as $row) {
-            $table->add_data_keyed($row);
-        }
-        $table->finish_output();
+        $table->format_and_add_array_of_rows($data);
     }
 
     public function test_empty_table() {

@@ -629,17 +629,39 @@ class flexible_table {
     }
 
     /**
-     * Add a row of data to the table. This function takes an array with
-     * column names as keys.
+     * Add a row of data to the table. This function takes an array or object with
+     * column names as keys or properties.
+     *
      * It ignores any elements with keys that are not defined as columns. It
      * puts in empty strings into the row when there is no element in the passed
      * array corresponding to a column in the table. It puts the row elements in
      * the proper order.
-     * @param $rowwithkeys array
+     * @param $rowwithkeys object
      * @param string $classname CSS class name to add to this row's tr tag.
      */
     function add_data_keyed($rowwithkeys, $classname = '') {
         $this->add_data($this->get_row_from_keyed($rowwithkeys), $classname);
+    }
+
+    /**
+     * Add a number of rows to the table at once. And optionally finish output after they have been added.
+     *
+     * @param object[] $rowstoadd Array of rows to add to table, a null value in array adds a separator row. Or a object or
+     *                                  array is added to table. We expect keys/properties for the row array as would be passed
+     *                                  to add_data_keyed.
+     * @param bool     $finish
+     */
+    public function format_and_add_array_of_rows($rowstoadd, $finish = true) {
+        foreach ($rowstoadd as $row) {
+            if (is_null($row)) {
+                $this->add_separator();
+            } else {
+                $this->add_data_keyed($this->format_row($row));
+            }
+        }
+        if ($finish) {
+            $this->finish_output(!$this->is_downloading());
+        }
     }
 
     /**
