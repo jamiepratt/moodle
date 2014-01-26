@@ -504,6 +504,18 @@ abstract class question_behaviour {
     public function summarise_finish($step) {
         return get_string('attemptfinished', 'question');
     }
+
+    /**
+     * Is this step a try by a student?
+     *
+     * Any saved response before the question is finished is also counted as a try.
+     *
+     * @param question_attempt_step $step
+     * @return bool is this a step within a question attempt that represents a try by a student.
+     */
+    public function step_is_a_valid_try($step) {
+        return false;
+    }
 }
 
 
@@ -625,6 +637,11 @@ abstract class question_behaviour_with_save extends question_behaviour {
     }
 }
 
+abstract class question_behaviour_with_multiple_tries extends question_behaviour_with_save {
+    public function step_is_a_valid_try($step) {
+        return $step->has_behaviour_var('submit') && $step->get_state() != question_state::$invalid;
+    }
+}
 
 /**
  * This helper class contains the constants and methods required for

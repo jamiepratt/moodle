@@ -66,6 +66,21 @@ class question_attempt {
      */
     const PARAM_RAW_FILES = 'paramrawfiles';
 
+    /**
+     * @var string means first try at a question during an attempt by a user.
+     */
+    const FIRST_TRY = 'firsttry';
+
+    /**
+     * @var string means last try at a question during an attempt by a user.
+     */
+    const LAST_TRY = 'lasttry';
+
+    /**
+     * @var string means all tries at a question during an attempt by a user.
+     */
+    const ALL_TRIES = 'alltries';
+
     /** @var integer if this attempts is stored in the question_attempts table, the id of that row. */
     protected $id = null;
 
@@ -346,7 +361,7 @@ class question_attempt {
 
     /**
      * Get one of the steps in this attempt.
-     * For internal/test code use only.
+     *
      * @param int $i the step number.
      * @return question_attempt_step
      */
@@ -1390,6 +1405,139 @@ class question_attempt {
         }
 
         return $qa;
+    }
+
+    /**
+     * @var int[]|null the
+     */
+    protected $stepswithtries = null;
+
+
+    /**
+     * The step nos which represent a try by a student. Including any step with a response that is saved before the question
+     * attempt finishes.
+     *
+     * @return int[]
+     */
+    protected function get_steps_with_tries() {
+        if ($this->stepswithtries !== null) {
+            return $this->stepswithtries;
+        }
+        $stepnos = array();
+        $lastsavedstep = null;
+        foreach ($this->get_step_iterator() as $stepno => $step) {
+            if ($this->get_behaviour()->step_is_a_valid_try($step)) {
+                $stepnos[] = $stepno;
+                $lastsavedstep = null;
+            } else {
+                $qtdata = $step->get_qt_data();
+                if (count($qtdata)) {
+                    $lastsavedstep = $stepno;
+                }
+            }
+        }
+
+        if (!is_null($lastsavedstep)) {
+            $stepnos[] = $lastsavedstep;
+        }
+        if (empty($stepnos)) {
+            $this->stepswithtries = array();
+        } else {
+            // Re-index array so index starts with 1.
+            $this->stepswithtries = array_combine(range(1, count($stepnos)), $stepnos);
+        }
+        return $this->stepswithtries;
+    }
+
+    /**
+     * Is this the last try in the question attempt?
+     *
+     * @param int $tryno try no
+     * @return bool
+     */
+    protected function is_last_try($tryno) {
+        return $tryno == $this->get_no_of_tries();
+    }
+
+    /**
+     * @param int $tryno the try number, starting from 1.
+     * @return null|question_attempt_step the question_attempt_step for that try number
+     */
+    protected function get_step_with_try($tryno) {
+        $steps = $this->get_steps_with_tries();
+        if (!isset($steps[$tryno])) {
+            return null;
+        }
+        return $this->get_step($steps[$tryno]);
+    }
+
+    /**
+     * @param int $tryno the try number, starting from 1.
+     * @return null|int the step number.
+     */
+    public function get_step_no_with_try($tryno) {
+        $steps = $this->get_steps_with_tries();
+        if (!isset($steps[$tryno])) {
+            return 0;
+        } else {
+            return $steps[$tryno];
+        }
+
+    }
+
+    /**
+     * @return int the number of tries in this question attempt.
+     */
+    public function get_no_of_tries() {
+        return count($this->get_steps_with_tries());
+    }
+
+    /**
+     * @param int $tryno the try number starting from 1.
+     * @return question_state that the question was in after this try.
+     */
+    public function get_state_after_try($tryno) {
+        $step = $this->get_step_with_try($tryno);
+        if ($step === null) {
+            return null;
+        }
+        if ($this->is_last_try($tryno)) {
+            // If this is the last try then the step with the try data does not contain the correct state. We need to
+            // use the last step's state, after the attempt has been finished.
+            return $this->get_state();
+        }
+        return $step->get_state();
+    }
+
+
+    /**
+     * @param int $tryno the try number starting from 1.
+     * @return question_state that the question was in after this try.
+     */
+    public function get_summary_after_try($tryno) {
+        $step = $this->get_step_with_try($tryno);
+        if ($step === null) {
+            return null;
+        }
+        $qtdata = $step->get_qt_data();
+        return $this->get_question()->summarise_response($qtdata);
+    }
+
+    /**
+     * @param int $tryno the try number starting from 1.
+     * @return float fraction for this question after response in try no $tryno.
+     */
+    public function get_fraction_after_try($tryno) {
+        $step = $this->get_step_with_try($tryno);
+        if ($step === null) {
+            return null;
+        }
+        if ($this->is_last_try($tryno)) {
+            // If this is the last try then the step with the try data does not contain the correct fraction. We need to
+            // use the last step's fraction, after the attempt has been finished.
+            return $this->get_fraction();
+        }
+        return $step->get_fraction();
     }
 }
 
