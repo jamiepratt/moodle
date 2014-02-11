@@ -92,6 +92,15 @@ abstract class question_behaviour_type {
             question_display_options $options) {
         return array();
     }
+
+    /**
+     * Does this question behaviour allow multiple tries at a question within one attempt.
+     *
+     * @return bool
+     */
+    public function allows_multiple_tries() {
+        return false;
+    }
 }
 
 
