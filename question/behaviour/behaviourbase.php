@@ -281,10 +281,29 @@ abstract class question_behaviour {
     }
 
     /**
-     * @return question_possible_response[] where keys are subpartid or an empty array if no classification is possible.
+     * @param string $whichtries         which tries to analyse for response analysis. Will be one of
+     *                                   question_attempt::FIRST_TRY, LAST_TRY or ALL_TRIES.
+     *                                   Defaults to question_attempt::LAST_TRY.
+     * @return (question_classified_response|array)[] If $whichtries is question_attempt::FIRST_TRY or LAST_TRY index is subpartid
+     *                                   and values are question_classified_response instances.
+     *                                   If $whichtries is question_attempt::ALL_TRIES then first key is submitted response no
+     *                                   and the second key is subpartid.
      */
-    public function classify_response() {
-        return $this->question->classify_response($this->qa->get_last_qt_data());
+    public function classify_response($whichtries = question_attempt::LAST_TRY) {
+        if ($whichtries == question_attempt::LAST_TRY) {
+            return $this->question->classify_response($this->qa->get_last_qt_data());
+        } else {
+            $stepswithsubmit = $this->qa->get_steps_with_submitted_response_iterator();
+            if ($whichtries == question_attempt::FIRST_TRY) {
+                return $this->question->classify_response($stepswithsubmit[1]->get_qt_data());
+            } else {
+                $classifiedresponses = array();
+                foreach ($stepswithsubmit as $submittedresponseno => $step) {
+                    $classifiedresponses[$submittedresponseno] = $this->question->classify_response($step->get_qt_data());
+                }
+                return $classifiedresponses;
+            }
+        }
     }
 
     /**

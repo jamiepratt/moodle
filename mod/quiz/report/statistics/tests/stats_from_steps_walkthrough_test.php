@@ -80,8 +80,11 @@ class quiz_report_statistics_from_steps_testcase extends mod_quiz_attempt_walkth
         $whichattempts = QUIZ_GRADEAVERAGE;
         $groupstudents = array();
         $questions = $this->report->load_and_initialise_questions_for_calculations($this->quiz);
-        list($quizstats, $questionstats) =
-                        $this->report->get_all_stats_and_analysis($this->quiz, $whichattempts, $groupstudents, $questions);
+        list($quizstats, $questionstats) = $this->report->get_all_stats_and_analysis($this->quiz,
+                                                                                     $whichattempts,
+                                                                                     question_attempt::LAST_TRY,
+                                                                                     $groupstudents,
+                                                                                     $questions);
 
         $qubaids = quiz_statistics_qubaids_condition($this->quiz->id, $groupstudents, $whichattempts);
 
@@ -107,8 +110,8 @@ class quiz_report_statistics_from_steps_testcase extends mod_quiz_attempt_walkth
                 continue;
             }
             $responesstats = new \core_question\statistics\responses\analyser($question);
-            $this->assertTimeCurrent($responesstats->get_last_analysed_time($qubaids));
-            $analysis = $responesstats->load_cached($qubaids);
+            $this->assertTimeCurrent($responesstats->get_last_analysed_time($qubaids, question_attempt::LAST_TRY));
+            $analysis = $responesstats->load_cached($qubaids, question_attempt::LAST_TRY);
             $variantsnos = $analysis->get_variant_nos();
             if (isset($expectedvariantcounts[$slot])) {
                 // Compare contents, ignore ordering of array, using canonicalize parameter of assertEquals.
@@ -132,7 +135,7 @@ class quiz_report_statistics_from_steps_testcase extends mod_quiz_attempt_walkth
                         $classanalysis = $subpartanalysis->get_response_class($classid);
                         $actualresponsecounts = $classanalysis->data_for_question_response_table('', '');
                         foreach ($actualresponsecounts as $actualresponsecount) {
-                            $totalspervariantno[$subpartid][$variantno] += $actualresponsecount->count;
+                            $totalspervariantno[$subpartid][$variantno] += $actualresponsecount->totalcount;
                         }
                     }
                 }
@@ -292,7 +295,7 @@ class quiz_report_statistics_from_steps_testcase extends mod_quiz_attempt_walkth
 
     protected function assert_response_count_equals($question, $qubaids, $responsecount) {
         $responesstats = new \core_question\statistics\responses\analyser($question);
-        $analysis = $responesstats->load_cached($qubaids);
+        $analysis = $responesstats->load_cached($qubaids, question_attempt::LAST_TRY);
         if (!isset($responsecount['subpart'])) {
             $subpart = 1;
         } else {
@@ -308,14 +311,14 @@ class quiz_report_statistics_from_steps_testcase extends mod_quiz_attempt_walkth
         if ($responsecount['modelresponse'] !== '[NO RESPONSE]') {
             foreach ($actualresponsecounts as $actualresponsecount) {
                 if ($actualresponsecount->response == $responsecount['actualresponse']) {
-                    $this->assertEquals($responsecount['count'], $actualresponsecount->count);
+                    $this->assertEquals($responsecount['count'], $actualresponsecount->totalcount);
                     return;
                 }
             }
             throw new coding_exception("Actual response '{$responsecount['actualresponse']}' not found.");
         } else {
             $actualresponsecount = array_pop($actualresponsecounts);
-            $this->assertEquals($responsecount['count'], $actualresponsecount->count);
+            $this->assertEquals($responsecount['count'], $actualresponsecount->totalcount);
         }
     }
 

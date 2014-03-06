@@ -93,8 +93,16 @@ class quiz_statistics_question_table extends flexible_table {
         $columns[] = 'fraction';
         $headers[] = get_string('optiongrade', 'quiz_statistics');
 
-        $columns[] = 'count';
-        $headers[] = get_string('count', 'quiz_statistics');
+        if (!$responseanalysis->has_multiple_tries_data()) {
+            $columns[] = 'totalcount';
+            $headers[] = get_string('count', 'quiz_statistics');
+        } else {
+            $countcolumns = range(1, $responseanalysis->get_maximum_tries());
+            foreach ($countcolumns as $countcolumn) {
+                $columns[] = 'trycount'.$countcolumn;
+                $headers[] = get_string('counttryno', 'quiz_statistics', $countcolumn);
+            }
+        }
 
         $columns[] = 'frequency';
         $headers[] = get_string('frequency', 'quiz_statistics');
@@ -139,7 +147,18 @@ class quiz_statistics_question_table extends flexible_table {
         if (!$this->s) {
             return '';
         }
+        return $this->format_percentage($response->totalcount / $this->s);
+    }
 
-        return $this->format_percentage($response->count / $this->s);
+    public function other_cols($colname, $response) {
+        if (preg_match('/^trycount(\d+)$/', $colname, $matches)) {
+            if (isset($response->trycount[$matches[1]])) {
+                return $response->trycount[$matches[1]];
+            } else {
+                return 0;
+            }
+        } else {
+            return null;
+        }
     }
 }

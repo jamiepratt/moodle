@@ -150,6 +150,18 @@ class analysis_for_question {
     }
 
     /**
+     * @return bool Does this response analysis include counts for responses for multiple tries of the question?
+     */
+    public function has_multiple_tries_data() {
+        return false;
+    }
+
+    public function get_maximum_tries() {
+        return 1;
+    }
+
+
+    /**
      * Takes an array of {@link \question_classified_response} and adds counts of the responses to the sub parts and classes.
      *
      * @param int                             $variantno
@@ -162,13 +174,15 @@ class analysis_for_question {
     }
 
     /**
-     * @param \qubaid_condition $qubaids
-     * @param int               $questionid the question id
+     * @param \qubaid_condition $qubaids    which question usages have been analysed.
+     * @param string            $whichtries which tries have been analysed?
+     * @param int               $questionid which question.
      */
-    public function cache($qubaids, $questionid) {
+    public function cache($qubaids, $whichtries, $questionid) {
         foreach ($this->get_variant_nos() as $variantno) {
             foreach ($this->get_subpart_ids($variantno) as $subpartid) {
-                $this->get_analysis_for_subpart($variantno, $subpartid)->cache($qubaids, $questionid, $variantno, $subpartid);
+                $analysisforsubpart = $this->get_analysis_for_subpart($variantno, $subpartid);
+                $analysisforsubpart->cache($qubaids, $whichtries, $questionid, $variantno, $subpartid);
             }
         }
     }
