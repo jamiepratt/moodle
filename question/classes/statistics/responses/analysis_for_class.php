@@ -69,33 +69,50 @@ class analysis_for_class {
     }
 
     /**
-     * @param string $actualresponse
+     * @param string     $actualresponse
      * @param float|null $fraction
+     * @param int        $try
+     * @return \core_question\statistics\responses\analysis_for_actual_response
      */
-    public function count_response($actualresponse, $fraction) {
+    public function count_response($actualresponse, $fraction, $try) {
         if (!isset($this->actualresponses[$actualresponse])) {
             if ($fraction === null) {
                 $fraction = $this->fraction;
             }
-            $this->actualresponses[$actualresponse] = new analysis_for_actual_response($actualresponse, $fraction);
+            $this->add_response($actualresponse, $fraction);
         }
-        $this->actualresponses[$actualresponse]->increment_count();
+        $this->get_response($actualresponse)->increment_count($try);
     }
 
     /**
-     * @param \qubaid_condition $qubaids
-     * @param int               $questionid the question id
-     * @param int               $variantno
-     * @param string            $subpartid
+     * Cache analysis for class.
+     *
+     * @param \qubaid_condition $qubaids    which question usages have been analysed.
+     * @param string            $whichtries which tries have been analysed?
+     * @param int               $questionid which question.
+     * @param int               $variantno  which variant.
+     * @param string            $subpartid  which sub part.
      */
-    public function cache($qubaids, $questionid, $variantno, $subpartid) {
-        foreach ($this->actualresponses as $response => $actualresponse) {
-            $actualresponse->cache($qubaids, $questionid, $variantno, $subpartid, $this->responseclassid, $response);
+    public function cache($qubaids, $whichtries, $questionid, $variantno, $subpartid) {
+        foreach ($this->get_responses() as $response) {
+            $analysisforactualresponse = $this->get_response($response);
+            $analysisforactualresponse->cache($qubaids, $whichtries, $questionid, $variantno, $subpartid, $this->responseclassid);
         }
     }
 
-    public function add_response_and_count($response, $fraction, $count) {
-        $this->actualresponses[$response] = new analysis_for_actual_response($response, $fraction, $count);
+    public function add_response($response, $fraction) {
+        $this->actualresponses[$response] = new analysis_for_actual_response($response, $fraction);
+    }
+
+    /**
+     * Used when loading cached counts.
+     *
+     * @param string $response
+     * @param int $try the try number, will be zero if not keeping track of try.
+     * @param int $count the count
+     */
+    public function set_response_count($response, $try, $count) {
+        $this->actualresponses[$response]->set_count($try, $count);
     }
 
     /**
@@ -104,21 +121,23 @@ class analysis_for_class {
      *      the model response.
      */
     public function has_actual_responses() {
-        if (count($this->actualresponses) > 1) {
+        if (count($this->get_responses()) > 1) {
             return true;
-        } else if (count($this->actualresponses) == 1) {
-            $onlyactualresponse = reset($this->actualresponses);
-            return !$onlyactualresponse->response_matches($this->modelresponse);
+        } else if (count($this->get_responses()) == 1) {
+            $singleactualresponse = reset($this->actualresponses);
+            return !$singleactualresponse->response_matches($this->modelresponse);
         }
         return false;
     }
 
     /**
+     * @param bool $responseclasscolumn
+     * @param string $partid
      * @return object[]
      */
     public function data_for_question_response_table($responseclasscolumn, $partid) {
         $return = array();
-        if (empty($this->actualresponses)) {
+        if (count($this->get_responses()) == 0) {
             $rowdata = new \stdClass();
             $rowdata->part = $partid;
             $rowdata->responseclass = $this->modelresponse;
@@ -128,13 +147,43 @@ class analysis_for_class {
                 $rowdata->response = '';
             }
             $rowdata->fraction = $this->fraction;
-            $rowdata->count = 0;
+            $rowdata->totalcount = 0;
+            $rowdata->trycount = array();
             $return[] = $rowdata;
         } else {
-            foreach ($this->actualresponses as $actualresponse) {
-                $return[] = $actualresponse->data_for_question_response_table($partid, $this->modelresponse);
+            foreach ($this->get_responses() as $actualresponse) {
+                $response = $this->get_response($actualresponse);
+                $return[] = $response->data_for_question_response_table($partid, $this->modelresponse);
             }
         }
         return $return;
+    }
+
+    /**
+     * What is the highest try number that an actual response of this response class has been seen?
+     *
+     * @return int try number
+     */
+    public function get_maximum_tries() {
+        $max = 1;
+        foreach ($this->get_responses() as $actualresponse) {
+            $max = max($max, $this->get_response($actualresponse)->get_maximum_tries());
+        }
+        return $max;
+    }
+
+    /**
+     * @return string[] the actual responses we are counting tries at.
+     */
+    protected function get_responses() {
+        return array_keys($this->actualresponses);
+    }
+
+    /**
+     * @param string $response
+     * @return analysis_for_actual_response the instance for keeping count of tries for $response.
+     */
+    protected function get_response($response) {
+        return $this->actualresponses[$response];
     }
 }
