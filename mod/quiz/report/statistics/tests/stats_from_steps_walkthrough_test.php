@@ -266,14 +266,20 @@ class quiz_report_statistics_from_steps_testcase extends mod_quiz_attempt_walkth
      */
     protected function check_response_counts($responsecounts, $qubaids, $questions, $whichtries) {
         for ($rowno = 0; $rowno < $responsecounts->getRowCount(); $rowno++) {
-            $responsecount = $responsecounts->getRow($rowno);
-            if ($responsecount['randq'] == '') {
-                $question = $questions[$responsecount['slot']];
+            $expected = $responsecounts->getRow($rowno);
+            $defaultsforexpected = array('randq' => '', 'variant' => '1', 'subpart' => '1');
+            foreach ($defaultsforexpected as $key => $expecteddefault) {
+                if (!isset($expected[$key])) {
+                    $expected[$key] = $expecteddefault;
+                }
+            }
+            if ($expected['randq'] == '') {
+                $question = $questions[$expected['slot']];
             } else {
-                $qid = $this->randqids[$responsecount['slot']][$responsecount['randq']];
+                $qid = $this->randqids[$expected['slot']][$expected['randq']];
                 $question = question_finder::get_instance()->load_question_data($qid);
             }
-            $this->assert_response_count_equals($question, $qubaids, $responsecount, $whichtries);
+            $this->assert_response_count_equals($question, $qubaids, $expected, $whichtries);
         }
     }
 

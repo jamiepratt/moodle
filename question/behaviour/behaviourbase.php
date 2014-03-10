@@ -316,7 +316,7 @@ abstract class question_behaviour {
      *                                     question_classified_response. Return value from self::classify_response for ALL_TRIES.
      * @return array return non repeated responses.
      */
-    public function remove_repeated_submitted_responses($classifiedresponses) {
+    protected function remove_repeated_submitted_responses($classifiedresponses) {
         $submittedresponsenos = array_keys($classifiedresponses);
         $submittedresponsenos = array_reverse($submittedresponsenos);
         $lastsubmittedresponseno = array_shift($submittedresponsenos);
