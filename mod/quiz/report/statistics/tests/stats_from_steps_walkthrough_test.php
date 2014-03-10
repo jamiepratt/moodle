@@ -211,18 +211,21 @@ class quiz_report_statistics_from_steps_testcase extends mod_quiz_attempt_walkth
             if ($actualresponsecount->response == $expected['actualresponse'] ||
                             count($actualresponsecounts) == 1) {
                 $i = 1;
+                $partofanalysis = " slot {$expected['slot']}, rand q '{$expected['randq']}', variant {$expected['variant']}, ".
+                                    "for expected model response {$expected['modelresponse']}, ".
+                                    "actual response {$expected['actualresponse']}";
                 while (isset($expected['count'.$i])) {
                     if ($expected['count'.$i] != 0) {
+                        $this->assertTrue(isset($actualresponsecount->trycount[$i]),
+                            "There is no count at all for try $i on ".$partofanalysis);
                         $this->assertEquals($expected['count'.$i], $actualresponsecount->trycount[$i],
-                                            "Count for try $i on slot {$expected['slot']}, rand q '{$expected['randq']}, ".
-                                            "variant {$expected['variant']}");
+                                            "Count for try $i on ".$partofanalysis);
                     }
                     $i++;
                 }
                 if (isset($expected['totalcount'])) {
                     $this->assertEquals($expected['totalcount'], $actualresponsecount->totalcount,
-                                        "Total count for slot '{$expected['slot']}', rand q '{$expected['randq']}', ".
-                                        "variant '{$expected['variant']}'");
+                                        "Total count on ".$partofanalysis);
                 }
                 return;
             }
