@@ -16,24 +16,36 @@
 
 /**
  *
- * 'Classes' to classify the sub parts of a question response into.
+ * Data structure to count responses for each of the sub parts of a question.
  *
  * @package    core_question
- * @copyright  2013 The Open University
+ * @copyright  2014 The Open University
  * @author     James Pratt me@jamiep.org
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace core_question\statistics\responses;
 
-
+/**
+ * Representing the analysis of each of the sub parts of each variant of the question.
+ *
+ * - There is a separate data structure for each question or sub question's analysis
+ * {@link \core_question\statistics\responses\analysis_for_question}
+ * or {@link \core_question\statistics\responses\analysis_for_question_all_tries}.
+ * - There are separate analysis for each variant in this top level instance.
+ * - Then there are class instances representing the analysis of each of the sub parts of each variant of the question.
+ * {@link \core_question\statistics\responses\analysis_for_subpart}.
+ * - Then within the sub part analysis there are response class analysis
+ * {@link \core_question\statistics\responses\analysis_for_class}.
+ * - Then within each class analysis there are analysis for each actual response
+ * {@link \core_question\statistics\responses\analysis_for_actual_response}.
+ */
 class analysis_for_subpart {
 
     /**
      * Takes an array of possible_responses - ({@link \question_possible_response} objects).
-     * Or takes an array of {@link \question_possible_response} objects.
      *
-     * @param \question_possible_response[] $responseclasses
+     * @param \question_possible_response[]|null $responseclasses
      */
     public function __construct(array $responseclasses = null) {
         if (is_array($responseclasses)) {
@@ -67,25 +79,31 @@ class analysis_for_subpart {
     }
 
     public function has_multiple_response_classes() {
-        return count($this->responseclasses) > 1;
+        return count($this->get_response_class_ids()) > 1;
     }
 
     /**
      * @param \question_classified_response $subpart
+     * @param int $try the try number or zero if not keeping track of try number
      */
-    public function count_response($subpart) {
-        $this->responseclasses[$subpart->responseclassid]->count_response($subpart->response, $subpart->fraction);
+    public function count_response($subpart, $try = 0) {
+        $responseanalysisforclass = $this->get_response_class($subpart->responseclassid);
+        $responseanalysisforclass->count_response($subpart->response, $subpart->fraction, $try);
     }
 
     /**
-     * @param \qubaid_condition $qubaids
-     * @param int               $questionid the question id
-     * @param int               $variantno
-     * @param string            $subpartid
+     * Cache analysis for sub part.
+     *
+     * @param \qubaid_condition $qubaids    which question usages have been analysed.
+     * @param string            $whichtries which tries have been analysed?
+     * @param int               $questionid which question.
+     * @param int               $variantno  which variant.
+     * @param string            $subpartid  which sub part.
      */
-    public function cache($qubaids, $questionid, $variantno, $subpartid) {
-        foreach ($this->responseclasses as $responseclassid => $responseclass) {
-            $responseclass->cache($qubaids, $questionid, $variantno, $subpartid, $responseclassid);
+    public function cache($qubaids, $whichtries, $questionid, $variantno, $subpartid) {
+        foreach ($this->get_response_class_ids() as $responseclassid) {
+            $analysisforclass = $this->get_response_class($responseclassid);
+            $analysisforclass->cache($qubaids, $whichtries, $questionid, $variantno, $subpartid, $responseclassid);
         }
     }
 
@@ -95,11 +113,24 @@ class analysis_for_subpart {
      *      the model response.
      */
     public function has_actual_responses() {
-        foreach ($this->responseclasses as $responseclass) {
-            if ($responseclass->has_actual_responses()) {
+        foreach ($this->get_response_class_ids() as $responseclassid) {
+            if ($this->get_response_class($responseclassid)->has_actual_responses()) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * What is the highest try number for this sub part?
+     *
+     * @return int max tries
+     */
+    public function get_maximum_tries() {
+        $max = 1;
+        foreach ($this->get_response_class_ids() as $responseclassid) {
+            $max = max($max, $this->get_response_class($responseclassid)->get_maximum_tries());
+        }
+        return $max;
     }
 }
