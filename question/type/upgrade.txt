@@ -18,6 +18,8 @@ This files describes API changes for question type plugins.
    human friendly format in the csv file to response data expected by the question type using 'prepare_simulated_post_data' and
    to convert back from a question type response array to values for download in a csv file using
    'get_student_response_values_for_simulation'.
+  + All question types (except description) must now override summarise_response as this is needed by the responses report to
+  display a summary of the response for each try.
 === 2.6 ===
   + The changes in MDL-32750 were reverted in favour of the new pdw toggle toolbars
     plugin for TinyMCE. The get_non_collapsible_editor_options method has been deprecated.

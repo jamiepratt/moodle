@@ -211,6 +211,19 @@ abstract class question_definition {
     }
 
     /**
+     * Produce a plain text summary of a response.
+     *
+     * @param array $response a response, as might be passed to {@link grade_response()}.
+     * @return string a plain text summary of that response, that could be used in reports.
+     */
+    public function summarise_response(array $response) {
+        debugging('No summary available for response you need to override summarise_response in '.
+                  'the question_definition child class '.get_class($this), DEBUG_DEVELOPER);
+
+        return '-';
+    }
+
+    /**
      * @return int the number of vaiants that this question has.
      */
     public function get_num_variants() {
